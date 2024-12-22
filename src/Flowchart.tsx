@@ -1,5 +1,7 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useRef } from "react";
 import ReactFlow, {
+	applyNodeChanges,
+	applyEdgeChanges,
 	addEdge,
 	Background,
 	Connection,
@@ -7,15 +9,14 @@ import ReactFlow, {
 	MarkerType,
 	MiniMap,
 	Node,
-	useEdgesState,
-	useNodesState,
-	OnConnectStartParams,
 	OnConnect,
 	OnEdgesDelete,
 	OnNodesDelete,
 	OnNodesChange,
 	OnEdgesChange,
-	OnConnectEnd
+	reconnectEdge,
+	ReactFlowInstance,
+	Controls,
 } from "reactflow";
 import "reactflow/dist/style.css";
 
@@ -24,16 +25,6 @@ import { getUpstreamAndDownstream } from "./graphUtils";
 import NodeEditor from "./NodeEditor";
 import { FlowNodeData } from "./types";
 
-/**
- * Flowchart component that displays the React Flow canvas.
- * Users can:
- *  - Drag the canvas to pan
- *  - Mouse wheel (or pinch) to zoom
- *  - Connect edges by dragging from a node handle
- *  - Double-click a node to rename
- *  - Single-click a node to highlight upstream/downstream
- *  - Press Delete to remove selected node(s) or edge(s)
- */
 export default function Flowchart() {
 	const {
 		nodes,
@@ -43,115 +34,119 @@ export default function Flowchart() {
 		onAddNode,
 		selectedNodeId,
 		setSelectedNodeId,
-		setHighlightedElements,
+		selectedEdgeId,
+		setSelectedEdgeId,
 		highlightedNodes,
 		highlightedEdges,
+		setHighlightedElements,
 	} = useStore();
 
-	const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
+	const reconnectSuccessful = useRef(false);
+	const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
 
-	const [nodesState, onNodesChange] = useNodesState(nodes);
-	const [edgesState, onEdgesChange] = useEdgesState(edges);
+	// --- Node & Edge Change Handlers ---
 
-	// Keep store and local state in sync
-	const handleNodesChange: OnNodesChange = useCallback(
-		(changes) => {
-			onNodesChange(changes);
-			setNodes(nodesState);
-		},
-		[onNodesChange, setNodes, nodesState]
-	);
+	const onNodesChange: OnNodesChange = useCallback((changes) => {
+		setNodes((prevNodes) => applyNodeChanges(changes, prevNodes));
+	}, [setNodes]);
 
-	const handleEdgesChange: OnEdgesChange = useCallback(
-		(changes) => {
-			onEdgesChange(changes);
-			setEdges(edgesState);
-		},
-		[onEdgesChange, setEdges, edgesState]
-	);
+	const onEdgesChange: OnEdgesChange = useCallback((changes) => {
+		setEdges((prevEdges) => applyEdgeChanges(changes, prevEdges));
+	}, [setEdges]);
 
-	const handleConnect: OnConnect = useCallback(
-		(connection: Connection) => {
-			const newEdge: Edge = {
-				id: `edge-${connection.source}-${connection.sourceHandle}-${connection.target}-${connection.targetHandle}`,
-				source: connection.source ?? "",
-				target: connection.target ?? "",
-				markerEnd: {
-					type: MarkerType.ArrowClosed,
-				},
-			};
-			const updatedEdges = addEdge(newEdge, edgesState);
-			setEdges(updatedEdges);
-		},
-		[edgesState, setEdges]
-	);
+	const onConnect: OnConnect = useCallback((connection: Connection) => {
+		const newEdge: Edge = {
+			id: `edge-${connection.source}-${connection.sourceHandle}-${connection.target}-${connection.targetHandle}`,
+			source: connection.source ?? "",
+			target: connection.target ?? "",
+			markerEnd: { type: MarkerType.ArrowClosed },
+			type: 'smoothstep',
+		};
+		setEdges((prevEdges) => addEdge(newEdge, prevEdges));
+	}, [setEdges]);
 
-	const handleNodesDelete: OnNodesDelete = (deleted) => {
-		// Update store
-		const deletedIds = deleted.map((n) => n.id);
-		// Clean up edges from these nodes as well
-		setEdges((eds) => eds.filter((edge) => !deletedIds.includes(edge.source) && !deletedIds.includes(edge.target)));
-	};
+	const onReconnect = useCallback((oldEdge: Edge, newConnection: Connection) => {
+		reconnectSuccessful.current = true;
+		setEdges((els) => reconnectEdge(oldEdge, newConnection, els));
+	}, [setEdges]);
 
-	const handleEdgesDelete: OnEdgesDelete = (deleted) => {
-		// Nothing else needed if you're using useEdgesState
-	};
+	const onReconnectStart = useCallback(() => {
+		reconnectSuccessful.current = false;
+	}, []);
 
-	/**
-	 * On single-click of a node, highlight it and all its upstream/downstream nodes/edges.
-	 */
-	const onNodeClick = useCallback(
-		(_: React.MouseEvent, node: Node<FlowNodeData>) => {
-			setSelectedNodeId(node.id);
+	const onReconnectEnd = useCallback((_: any, _edge: Edge) => {
+		// if (!reconnectSuccessful.current && edge.id === selectedEdgeId) {
+		// 	setSelectedEdgeId(null);
+		// 	setEdges((eds) => eds.filter((e) => e.id !== edge.id));
+		// }
+		reconnectSuccessful.current = true;
+	}, [setEdges]);
 
-			// find all upstream/downstream node ids & edges
-			const { allUpstreamNodeIds, allDownstreamNodeIds, allUpstreamEdges, allDownstreamEdges } = getUpstreamAndDownstream(node.id);
+	// --- Node & Edge Delete Handlers ---
+	const onNodesDelete: OnNodesDelete = useCallback((deletedNodes) => {
+		const deletedIds = deletedNodes.map((n) => n.id);
+		// Remove edges connected to these deleted nodes:
+		setEdges((prevEdges) =>
+			prevEdges.filter((edge) => !deletedIds.includes(edge.source) && !deletedIds.includes(edge.target))
+		);
+	}, [setEdges]);
 
-			setHighlightedElements({
-				nodes: new Set([...allUpstreamNodeIds, node.id, ...allDownstreamNodeIds]),
-				edges: new Set([...allUpstreamEdges, ...allDownstreamEdges]),
-			});
-		},
-		[setSelectedNodeId, setHighlightedElements]
-	);
+	const onEdgesDelete: OnEdgesDelete = useCallback((_deletedEdges) => {
+		// If you want to do something special on edge deletion, do it here.
+		// By default, React Flow + applyEdgeChanges will remove them from the state anyway.
+	}, []);
 
-	/**
-	 * On double-click of a node, open the node-editor overlay (handled by NodeEditor).
-	 */
-	const onNodeDoubleClick = useCallback(
-		(_: React.MouseEvent, node: Node<FlowNodeData>) => {
-			// Trigger store to open editor for the node
-			useStore.setState({ isEditingNodeId: node.id });
-		},
-		[]
-	);
+	// --- Click Handlers ---
+	const handleNodeClick = useCallback((_: any, node: Node<FlowNodeData>) => {
+		setSelectedNodeId(node.id);
+		setSelectedEdgeId(null);
+		const { allUpstreamNodeIds, allDownstreamNodeIds, allUpstreamEdges, allDownstreamEdges } =
+			getUpstreamAndDownstream(node.id);
 
-	/**
-	 * Keydown handler for shortcuts, e.g. Delete to remove selected elements
-	 */
-	const onKeyDown = useCallback(
-		(e: React.KeyboardEvent) => {
-			if (e.key === "Delete") {
-				if (selectedNodeId) {
-					// Remove selected node
-					setNodes((nds) => nds.filter((n) => n.id !== selectedNodeId));
-					// Remove edges associated
-					setEdges((eds) => eds.filter((ed) => ed.source !== selectedNodeId && ed.target !== selectedNodeId));
-					useStore.setState({ selectedNodeId: null, highlightedNodes: new Set(), highlightedEdges: new Set() });
-				} else {
-					// or if an edge is selected in future
-				}
+		setHighlightedElements({
+			nodes: new Set([...allUpstreamNodeIds, node.id, ...allDownstreamNodeIds]),
+			edges: new Set([...allUpstreamEdges, ...allDownstreamEdges]),
+		});
+	}, [setSelectedNodeId, setHighlightedElements]);
+
+	const handleEdgeClick = useCallback((_: any, edge: Edge) => {
+		setSelectedEdgeId(edge.id);
+		setSelectedNodeId(null);
+		setHighlightedElements({
+			nodes: new Set([edge.source, edge.target]),
+			edges: new Set(),
+		});
+	}, [setSelectedEdgeId]);
+
+	// const handleNodeDoubleClick = useCallback((_: any, node: Node<FlowNodeData>) => {
+	// 	// Open editor for that node
+	// 	useStore.setState({ isEditingNodeId: node.id });
+	// }, []);
+
+	// --- Keyboard (Delete Key) ---
+	const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+		if (e.key === "Delete") {
+			if (selectedNodeId) {
+				// Remove the node from store
+				setNodes((nds) => nds.filter((n) => n.id !== selectedNodeId));
+				// Remove edges associated with that node
+				setEdges((eds) => eds.filter((ed) => ed.source !== selectedNodeId && ed.target !== selectedNodeId));
+				// Clear node highlight & selection
+				useStore.setState({ selectedNodeId: null, highlightedNodes: new Set(), highlightedEdges: new Set() });
+			} else if (selectedEdgeId) {
+				// Remove edges associated with that node
+				setEdges((eds) => eds.filter((ed) => ed.id !== selectedEdgeId));
+				// Clear edge selection
+				setSelectedEdgeId(null);
 			}
-		},
-		[selectedNodeId, setNodes, setEdges]
-	);
+		}
+	}, [selectedNodeId, setNodes, setEdges]);
 
-	/**
-	 * Add a node at a random position in the visible area, for demonstration.
-	 */
+	// --- Add Node ---
 	const addNewNode = useCallback(() => {
 		if (!reactFlowInstance) return;
-		onAddNode(reactFlowInstance.project({ x: 200, y: 100 })); // Adjust position
+		const position = reactFlowInstance.screenToFlowPosition({ x: 1000, y: 500 });
+		onAddNode(position);
 	}, [onAddNode, reactFlowInstance]);
 
 	return (
@@ -167,33 +162,40 @@ export default function Flowchart() {
 			</div>
 
 			<ReactFlow
-				nodes={nodesState.map((n) => ({
+				nodes={nodes.map((n) => ({
 					...n,
-					style: highlightedNodes.has(n.id)
-						? {
-							outline: "2px solid #ff0000",
-							backgroundColor: "#ffe5e5",
-						}
-						: {},
+					style: selectedNodeId == n.id
+						? { outline: "2px solid #ffaf57", backgroundColor: "#fff5e6" }
+						: (highlightedNodes.has(n.id)
+							? { outline: "2px solid #ffde85" }
+							: {}
+						),
 				}))}
-				edges={edgesState.map((e) => ({
+				edges={edges.map((e) => ({
 					...e,
-					style: highlightedEdges.has(e.id)
-						? { stroke: "#ff0000", strokeWidth: 2 }
-						: {},
+					style: selectedEdgeId == e.id
+						? { stroke: "#ffaf57", strokeWidth: 2 }
+						: (highlightedEdges.has(e.id)
+							? { stroke: "#ffde85", strokeWidth: 2 }
+							: {}
+						),
 				}))}
-				onNodesChange={handleNodesChange}
-				onEdgesChange={handleEdgesChange}
-				onConnect={handleConnect}
-				onNodesDelete={handleNodesDelete}
-				onEdgesDelete={handleEdgesDelete}
-				onNodeClick={onNodeClick}
-				onNodeDoubleClick={onNodeDoubleClick}
+				onNodesChange={onNodesChange}
+				onEdgesChange={onEdgesChange}
+				onConnect={onConnect}
+				onReconnect={onReconnect}
+				onReconnectStart={onReconnectStart}
+				onReconnectEnd={onReconnectEnd}
+				onNodesDelete={onNodesDelete}
+				onEdgesDelete={onEdgesDelete}
+				onNodeClick={handleNodeClick}
+				onEdgeClick={handleEdgeClick}
+				// onNodeDoubleClick={handleNodeDoubleClick}
 				onInit={setReactFlowInstance}
 				fitView
 				fitViewOptions={{ padding: 0.2 }}
 				snapToGrid
-				snapGrid={[15, 15]}
+				snapGrid={[20, 20]}
 				panOnDrag
 				multiSelectionKeyCode={["ShiftLeft", "ShiftRight"]}
 				nodesDraggable
@@ -201,9 +203,10 @@ export default function Flowchart() {
 			>
 				<MiniMap />
 				<Background />
+				<Controls />
 			</ReactFlow>
 
-			{/* Modal for editing node name */}
+			{/* Editor Modal if isEditingNodeId is set */}
 			<NodeEditor />
 		</div>
 	);

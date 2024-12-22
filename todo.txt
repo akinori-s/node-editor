@@ -1,0 +1,8 @@
+- make the handles on the left and right of a node (horizontal flow)
+- allow editing of the node's text on double click of the node
+- allow editing of the node's text on double click from the sidebar
+- highlight multiple nodes and edges when they are selected using shift click
+- delete all nodes and edges that are selected
+- create a new edge for each node that is selected when creating an edge
+- implement an undo feature
+- 
