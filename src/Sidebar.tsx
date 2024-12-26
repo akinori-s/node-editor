@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useStore } from "./store";
-import { NodeData } from "./types";
+import { getUpstreamAndDownstream } from "./graphUtils";
 
 interface SidebarProps {
 	searchQuery: string;
@@ -12,7 +12,9 @@ interface SidebarProps {
  * optionally sorted by alphabetical order or creation order.
  */
 export default function Sidebar({ searchQuery, sortMethod }: SidebarProps) {
-	const { nodes, selectedNodeId, setSelectedNodeId, setHighlightedElements } = useStore();
+	const { nodes, selectedNodeId, setSelectedNodeId, setSelectedEdgeId, setHighlightedElements, setNodes } = useStore();
+	const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
+	const [editValue, setEditValue] = useState("");
 
 	// Filter nodes by the search query:
 	const filteredNodes = useMemo(() => {
@@ -36,18 +38,39 @@ export default function Sidebar({ searchQuery, sortMethod }: SidebarProps) {
 	 */
 	const handleNodeClick = (nodeId: string) => {
 		// Programmatically set the selected node in the store,
-		// so it highlights in the Flowchart. 
+		// so it highlights in the Flowchart.
 		setSelectedNodeId(nodeId);
+		setSelectedEdgeId(null);
+		const { allUpstreamNodeIds, allDownstreamNodeIds, allUpstreamEdges, allDownstreamEdges } =
+			getUpstreamAndDownstream(nodeId);
 
-		// Clear highlight for others. Actual highlighting is done in Flowchart's onNodeClick,
-		// so we can re-run that logic here OR we can dispatch a custom event. For simplicity,
-		// let's do a minimal highlight reset here. The actual BFS highlight is triggered in Flowchart
-		// on a "real" node click. If you want to mimic that logic here, you could import & reuse 
-		// getUpstreamAndDownstream as well.
 		setHighlightedElements({
-			nodes: new Set([nodeId]),
-			edges: new Set(),
+			nodes: new Set([...allUpstreamNodeIds, nodeId, ...allDownstreamNodeIds]),
+			edges: new Set([...allUpstreamEdges, ...allDownstreamEdges]),
 		});
+	};
+
+	const handleDoubleClick = (nodeId: string, currentLabel: string) => {
+		setEditingNodeId(nodeId);
+		setEditValue(currentLabel);
+	};
+
+	const handleSave = () => {
+		if (editingNodeId) {
+			setNodes((nodes) =>
+				nodes.map((node) =>
+					node.id === editingNodeId
+						? { ...node, data: { ...node.data, label: editValue } }
+						: node
+				)
+			);
+			setEditingNodeId(null);
+		}
+	};
+
+	const handleCancel = () => {
+		setEditingNodeId(null);
+		setEditValue("");
 	};
 
 	return (
@@ -58,8 +81,28 @@ export default function Sidebar({ searchQuery, sortMethod }: SidebarProps) {
 					className={`p-2 cursor-pointer border-b border-gray-200 ${node.id === selectedNodeId ? "bg-blue-200" : "hover:bg-gray-200"
 						}`}
 					onClick={() => handleNodeClick(node.id)}
+					onDoubleClick={() => handleDoubleClick(node.id, node.data?.label)}
 				>
-					{node.data?.label}
+					{editingNodeId === node.id ? (
+						<input
+							type="text"
+							value={editValue}
+							onChange={(e) => setEditValue(e.target.value)}
+							onBlur={handleSave}
+							onKeyDown={(e) => {
+								if (e.key === "Enter") {
+									handleSave();
+								} else if (e.key === "Escape") {
+									handleCancel();
+								}
+							}}
+							autoFocus
+							className="w-full px-1 bg-white"
+							onClick={(e) => e.stopPropagation()}
+						/>
+					) : (
+						node.data?.label
+					)}
 				</div>
 			))}
 		</div>

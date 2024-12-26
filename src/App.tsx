@@ -2,7 +2,6 @@ import { useState } from "react";
 import Flowchart from "./Flowchart";
 import Sidebar from "./Sidebar";
 import SearchBar from "./SearchBar";
-// import { NodeData } from "./types";
 
 function App() {
 	const [searchQuery, setSearchQuery] = useState("");
