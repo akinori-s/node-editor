@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { Edge, Node, XYPosition } from "reactflow";
+import { Edge, Node, XYPosition, Position } from "reactflow";
 import { v4 as uuid } from "uuid";
 import { FlowNodeData } from "./types";
 
@@ -61,6 +61,8 @@ export const useStore = create<AppState>((set) => ({
 				label: "New Node",
 			},
 			type: "default",
+			sourcePosition: Position.Right,
+			targetPosition: Position.Left,
 		};
 		set((state) => ({
 			nodes: [...state.nodes, newNode],
