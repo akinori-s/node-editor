@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useRef } from "react";
+import React, { useCallback, useState } from "react";
 import ReactFlow, {
 	applyNodeChanges,
 	applyEdgeChanges,
@@ -66,20 +66,7 @@ export default function Flowchart() {
 	}, [setEdges]);
 
 	const onReconnect = useCallback((oldEdge: Edge, newConnection: Connection) => {
-		reconnectSuccessful.current = true;
 		setEdges((els) => reconnectEdge(oldEdge, newConnection, els));
-	}, [setEdges]);
-
-	const onReconnectStart = useCallback(() => {
-		reconnectSuccessful.current = false;
-	}, []);
-
-	const onReconnectEnd = useCallback((_: any, _edge: Edge) => {
-		// if (!reconnectSuccessful.current && edge.id === selectedEdgeId) {
-		// 	setSelectedEdgeId(null);
-		// 	setEdges((eds) => eds.filter((e) => e.id !== edge.id));
-		// }
-		reconnectSuccessful.current = true;
 	}, [setEdges]);
 
 	// --- Node & Edge Delete Handlers ---
@@ -184,8 +171,6 @@ export default function Flowchart() {
 				onEdgesChange={onEdgesChange}
 				onConnect={onConnect}
 				onReconnect={onReconnect}
-				onReconnectStart={onReconnectStart}
-				onReconnectEnd={onReconnectEnd}
 				onNodesDelete={onNodesDelete}
 				onEdgesDelete={onEdgesDelete}
 				onNodeClick={handleNodeClick}
