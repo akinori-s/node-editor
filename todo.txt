@@ -1,4 +1,3 @@
-- allow editing of the node's text on double click of the node
 - allow editing of the node's text on double click from the sidebar
 - highlight multiple nodes and edges when they are selected using shift click
 - delete all nodes and edges that are selected

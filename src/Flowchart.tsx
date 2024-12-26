@@ -36,12 +36,13 @@ export default function Flowchart() {
 		setSelectedNodeId,
 		selectedEdgeId,
 		setSelectedEdgeId,
+		isEditingNodeId,
 		highlightedNodes,
 		highlightedEdges,
+		setIsEditingNodeId,
 		setHighlightedElements,
 	} = useStore();
 
-	const reconnectSuccessful = useRef(false);
 	const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
 
 	// --- Node & Edge Change Handlers ---
@@ -94,7 +95,7 @@ export default function Flowchart() {
 			nodes: new Set([...allUpstreamNodeIds, node.id, ...allDownstreamNodeIds]),
 			edges: new Set([...allUpstreamEdges, ...allDownstreamEdges]),
 		});
-	}, [setSelectedNodeId, setHighlightedElements]);
+	}, [setSelectedNodeId, setSelectedEdgeId, setHighlightedElements]);
 
 	const handleEdgeClick = useCallback((_: any, edge: Edge) => {
 		setSelectedEdgeId(edge.id);
@@ -103,12 +104,12 @@ export default function Flowchart() {
 			nodes: new Set([edge.source, edge.target]),
 			edges: new Set(),
 		});
-	}, [setSelectedEdgeId]);
+	}, [setSelectedEdgeId, setSelectedNodeId, setHighlightedElements]);
 
-	// const handleNodeDoubleClick = useCallback((_: any, node: Node<FlowNodeData>) => {
-	// 	// Open editor for that node
-	// 	useStore.setState({ isEditingNodeId: node.id });
-	// }, []);
+	const handleNodeDoubleClick = useCallback((_: any, node: Node<FlowNodeData>) => {
+	// Open editor for that node
+	setIsEditingNodeId(node.id);
+	}, [setIsEditingNodeId]);
 
 	// --- Keyboard (Delete Key) ---
 	const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -119,7 +120,8 @@ export default function Flowchart() {
 				// Remove edges associated with that node
 				setEdges((eds) => eds.filter((ed) => ed.source !== selectedNodeId && ed.target !== selectedNodeId));
 				// Clear node highlight & selection
-				useStore.setState({ selectedNodeId: null, highlightedNodes: new Set(), highlightedEdges: new Set() });
+				setSelectedNodeId(null);
+				setHighlightedElements({ nodes: new Set(), edges: new Set() });
 			} else if (selectedEdgeId) {
 				// Remove edges associated with that node
 				setEdges((eds) => eds.filter((ed) => ed.id !== selectedEdgeId));
@@ -127,7 +129,7 @@ export default function Flowchart() {
 				setSelectedEdgeId(null);
 			}
 		}
-	}, [selectedNodeId, setNodes, setEdges]);
+	}, [selectedNodeId, selectedEdgeId, setNodes, setEdges, setSelectedNodeId, setSelectedEdgeId, setHighlightedElements]);
 
 	// --- Add Node ---
 	const addNewNode = useCallback(() => {
@@ -175,7 +177,7 @@ export default function Flowchart() {
 				onEdgesDelete={onEdgesDelete}
 				onNodeClick={handleNodeClick}
 				onEdgeClick={handleEdgeClick}
-				// onNodeDoubleClick={handleNodeDoubleClick}
+				onNodeDoubleClick={handleNodeDoubleClick}
 				onInit={setReactFlowInstance}
 				fitView
 				fitViewOptions={{ padding: 0.2 }}
@@ -192,7 +194,7 @@ export default function Flowchart() {
 			</ReactFlow>
 
 			{/* Editor Modal if isEditingNodeId is set */}
-			<NodeEditor />
+			{isEditingNodeId !== null && <NodeEditor />}
 		</div>
 	);
 }
