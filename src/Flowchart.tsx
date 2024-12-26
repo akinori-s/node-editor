@@ -17,6 +17,8 @@ import ReactFlow, {
 	reconnectEdge,
 	ReactFlowInstance,
 	Controls,
+	OnSelectionChangeParams,
+	SelectionMode,
 } from "reactflow";
 import "reactflow/dist/style.css";
 
@@ -41,6 +43,11 @@ export default function Flowchart() {
 		highlightedEdges,
 		setIsEditingNodeId,
 		setHighlightedElements,
+		onDeleteSelected,
+		selectedNodeIds,
+		selectedEdgeIds,
+		setSelectedNodeIds,
+		setSelectedEdgeIds,
 	} = useStore();
 
 	const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
@@ -114,22 +121,23 @@ export default function Flowchart() {
 	// --- Keyboard (Delete Key) ---
 	const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
 		if (e.key === "Delete") {
-			if (selectedNodeId) {
-				// Remove the node from store
+			if (selectedNodeIds.length > 0 || selectedEdgeIds.length > 0) {
+				onDeleteSelected();
+			} else if (selectedNodeId) {
 				setNodes((nds) => nds.filter((n) => n.id !== selectedNodeId));
-				// Remove edges associated with that node
-				setEdges((eds) => eds.filter((ed) => ed.source !== selectedNodeId && ed.target !== selectedNodeId));
-				// Clear node highlight & selection
+				setEdges((eds) => eds.filter((ed) =>
+					ed.source !== selectedNodeId && ed.target !== selectedNodeId
+				));
 				setSelectedNodeId(null);
 				setHighlightedElements({ nodes: new Set(), edges: new Set() });
 			} else if (selectedEdgeId) {
-				// Remove edges associated with that node
 				setEdges((eds) => eds.filter((ed) => ed.id !== selectedEdgeId));
-				// Clear edge selection
 				setSelectedEdgeId(null);
 			}
 		}
-	}, [selectedNodeId, selectedEdgeId, setNodes, setEdges, setSelectedNodeId, setSelectedEdgeId, setHighlightedElements]);
+	}, [selectedNodeIds, selectedEdgeIds, selectedNodeId, selectedEdgeId,
+		onDeleteSelected, setNodes, setEdges, setSelectedNodeId,
+		setSelectedEdgeId, setHighlightedElements]);
 
 	// --- Add Node ---
 	const addNewNode = useCallback(() => {
@@ -137,6 +145,19 @@ export default function Flowchart() {
 		const position = reactFlowInstance.screenToFlowPosition({ x: 1000, y: 500 });
 		onAddNode(position);
 	}, [onAddNode, reactFlowInstance]);
+
+	// --- Selection Change Handler ---
+	const onSelectionChange = useCallback((params: OnSelectionChangeParams) => {
+		const nodeIds = params.nodes.map(node => node.id);
+		const edgeIds = params.edges.map(edge => edge.id);
+
+		setSelectedNodeIds(nodeIds);
+		setSelectedEdgeIds(edgeIds);
+		console.log(edgeIds);
+		// Update single selection state for backwards compatibility
+		setSelectedNodeId(nodeIds.length === 1 ? nodeIds[0] : null);
+		setSelectedEdgeId(edgeIds.length === 1 ? edgeIds[0] : null);
+	}, [setSelectedNodeIds, setSelectedEdgeIds, setSelectedNodeId, setSelectedEdgeId]);
 
 	return (
 		<div className="w-full h-full" onKeyDown={onKeyDown} tabIndex={0}>
@@ -179,6 +200,8 @@ export default function Flowchart() {
 				onEdgeClick={handleEdgeClick}
 				onNodeDoubleClick={handleNodeDoubleClick}
 				onInit={setReactFlowInstance}
+				onSelectionChange={onSelectionChange}
+				selectionMode={SelectionMode.Full}
 				fitView
 				fitViewOptions={{ padding: 0.2 }}
 				snapToGrid

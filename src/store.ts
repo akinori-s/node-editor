@@ -11,15 +11,20 @@ interface AppState {
 	isEditingNodeId: string | null;
 	highlightedNodes: Set<string>;
 	highlightedEdges: Set<string>;
+	selectedNodeIds: string[];
+	selectedEdgeIds: string[];
 
 	setNodes: (setter: (nodes: Node<FlowNodeData>[]) => Node<FlowNodeData>[] | void) => void;
 	setEdges: (setter: (edges: Edge[]) => Edge[] | void) => void;
 	setSelectedNodeId: (nodeId: string | null) => void;
 	setSelectedEdgeId: (edgeId: string | null) => void;
 	setIsEditingNodeId: (nodeId: string | null) => void;
+	setSelectedNodeIds: (nodeIds: string[] ) => void;
+	setSelectedEdgeIds: (edgeIds: string[] ) => void;
 	setHighlightedElements: (payload: { nodes: Set<string>; edges: Set<string> }) => void;
 
 	onAddNode: (position: XYPosition) => void;
+	onDeleteSelected: () => void;
 }
 
 export const useStore = create<AppState>((set) => ({
@@ -30,6 +35,8 @@ export const useStore = create<AppState>((set) => ({
 	isEditingNodeId: null,
 	highlightedNodes: new Set(),
 	highlightedEdges: new Set(),
+	selectedNodeIds: [],
+	selectedEdgeIds: [],
 
 	setNodes: (setter) => set((state) => {
 		const newNodes = setter([...state.nodes]);
@@ -46,6 +53,10 @@ export const useStore = create<AppState>((set) => ({
 	setSelectedEdgeId: (edgeId) => set({ selectedEdgeId: edgeId }),
 
 	setIsEditingNodeId: (nodeId) => set({ isEditingNodeId: nodeId }),
+
+	setSelectedNodeIds: (ids: string[]) => set({ selectedNodeIds: ids }),
+
+	setSelectedEdgeIds: (ids: string[]) => set({ selectedEdgeIds: ids }),
 
 	setHighlightedElements: ({ nodes, edges }) => set({
 		highlightedNodes: nodes,
@@ -68,4 +79,26 @@ export const useStore = create<AppState>((set) => ({
 			nodes: [...state.nodes, newNode],
 		}));
 	},
+
+	onDeleteSelected: () => set((state) => {
+		const remainingNodes = state.nodes.filter(
+			node => !state.selectedNodeIds.includes(node.id)
+		);
+		const remainingEdges = state.edges.filter(
+			edge => !state.selectedEdgeIds.includes(edge.id) &&
+			!state.selectedNodeIds.includes(edge.source) &&
+			!state.selectedNodeIds.includes(edge.target)
+		);
+
+		return {
+			nodes: remainingNodes,
+			edges: remainingEdges,
+			selectedNodeIds: [],
+			selectedEdgeIds: [],
+			selectedNodeId: null,
+			selectedEdgeId: null,
+			highlightedNodes: new Set(),
+			highlightedEdges: new Set()
+		};
+	}),
 }));
