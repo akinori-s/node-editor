@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { Edge, Node, XYPosition, Position } from "reactflow";
-import { v4 as uuid } from "uuid";
 import { FlowNodeData } from "./types";
 
 interface AppState {
