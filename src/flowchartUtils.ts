@@ -1,4 +1,5 @@
 import { Node, Edge, Position, MarkerType } from 'reactflow';
+import { v4 as uuid } from "uuid";
 
 interface FlowData {
     nodes: Node[];
@@ -24,22 +25,25 @@ export const importFlowData = (jsonData: any): FlowData => {
     const newEdges: Edge[] = [];
 
     jsonData.forEach((node: any, _index: number) => {
-        newNodes.push({
-            id: `node-${node.label}`,
+        const newNode: Node = {
+            id: uuid(),
             position: node.position,
             data: { label: node.label },
             type: 'default',
             sourcePosition: Position.Right,
             targetPosition: Position.Left
-        });
-
+        }
+        newNodes.push(newNode);
+    });
+    jsonData.forEach((node: any, _index: number) => {
         node.downstream?.forEach((targetLabel: string) => {
-            const targetNode = jsonData.findIndex((n: any) => n.label === targetLabel);
-            if (targetNode !== -1) {
+            const sourceNode = newNodes.find((n: Node) => n.data?.label === node.label);
+            const targetNode = newNodes.find((n: Node) => n.data?.label === targetLabel);
+            if (sourceNode !== undefined && targetNode !== undefined) {
                 newEdges.push({
-                    id: `edge-${node.label}-${targetLabel}`,
-                    source: `node-${node.label}`,
-                    target: `node-${targetLabel}`,
+                    id: uuid(),
+                    source: sourceNode.id,
+                    target: targetNode.id,
                     markerEnd: { type: MarkerType.ArrowClosed },
                     type: 'smoothstep'
                 });

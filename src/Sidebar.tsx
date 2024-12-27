@@ -12,7 +12,15 @@ interface SidebarProps {
  * optionally sorted by alphabetical order or creation order.
  */
 export default function Sidebar({ searchQuery, sortMethod }: SidebarProps) {
-	const { nodes, selectedNodeId, setSelectedNodeId, setSelectedEdgeId, setHighlightedElements, setNodes, isLabelDuplicate } = useStore();
+	const {
+		nodes,
+		selectedNodeId,
+		setSelectedNodeId,
+		setSelectedEdgeId,
+		setHighlightedElements,
+		isLabelDuplicate,
+		setNodeLabel,
+	} = useStore();
 	const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
 	const [editValue, setEditValue] = useState("");
 	const [errorNodeID, setErrorNodeID] = useState("");
@@ -67,17 +75,7 @@ export default function Sidebar({ searchQuery, sortMethod }: SidebarProps) {
 				setErrorNodeID(editingNodeId);
 				return;
 			}
-			setNodes((nodes) =>
-				nodes.map((node) =>
-					node.id === editingNodeId
-						? {
-							...node,
-							id: `node-${editValue}`,
-							data: { ...node.data, label: editValue }
-						}
-						: node
-				)
-			);
+			setNodeLabel(editingNodeId, editValue);
 			setEditingNodeId(null);
 			setErrorNodeID("");
 		}

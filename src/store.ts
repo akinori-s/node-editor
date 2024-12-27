@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { Edge, Node, XYPosition, Position } from "reactflow";
 import { FlowNodeData } from "./types";
+import { v4 as uuid } from "uuid";
 
 interface AppState {
 	nodes: Node<FlowNodeData>[];
@@ -25,6 +26,7 @@ interface AppState {
 	onAddNode: (position: XYPosition) => void;
 	onDeleteSelected: () => void;
 	isLabelDuplicate: (nodes: Node[], label: string, excludeNodeId?: string) => boolean;
+	setNodeLabel: (nodeId: string, nodeLabel: string) => void;
 }
 
 const getNextNodeName = (nodes: Node<FlowNodeData>[]): string => {
@@ -81,7 +83,7 @@ export const useStore = create<AppState>((set) => ({
 		set((state) => {
 			const nodeLabel = getNextNodeName(state.nodes);
 			const newNode: Node<FlowNodeData> = {
-				id: `node-${nodeLabel}`,
+				id: uuid(),
 				position,
 				data: {
 					label: nodeLabel,
@@ -122,5 +124,19 @@ export const useStore = create<AppState>((set) => ({
 		return nodes.some(node =>
 			node.data.label === label && node.id !== excludeNodeId
 		);
+	},
+
+	setNodeLabel: (nodeId: string, nodeLabel: string) => {
+		set((state) => {
+			const updatedNodes = state.nodes.map(node =>
+				node.id === nodeId
+					? {
+						...node,
+						data: { label: nodeLabel }
+					}
+					: node
+			);
+			return { nodes: updatedNodes };
+		});
 	},
 }));

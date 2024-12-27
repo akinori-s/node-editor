@@ -27,6 +27,7 @@ import { getUpstreamAndDownstream } from "./graphUtils";
 import NodeEditor from "./NodeEditor";
 import { FlowNodeData } from "./types";
 import { importFlowData, exportToFile } from './flowchartUtils';
+import { v4 as uuid } from "uuid";
 
 export default function Flowchart() {
 	const {
@@ -65,7 +66,7 @@ export default function Flowchart() {
 
 	const onConnect: OnConnect = useCallback((connection: Connection) => {
 		const newEdge: Edge = {
-			id: `edge-${connection.source}-${connection.target}`,
+			id: uuid(),
 			source: connection.source ?? "",
 			target: connection.target ?? "",
 			markerEnd: { type: MarkerType.ArrowClosed },
@@ -75,7 +76,7 @@ export default function Flowchart() {
 	}, [setEdges]);
 
 	const onReconnect = useCallback((oldEdge: Edge, newConnection: Connection) => {
-		setEdges((els) => reconnectEdge(oldEdge, newConnection, els));
+		setEdges((edges) => reconnectEdge(oldEdge, newConnection, edges));
 	}, [setEdges]);
 
 	// --- Node & Edge Delete Handlers ---
@@ -154,7 +155,6 @@ export default function Flowchart() {
 
 		setSelectedNodeIds(nodeIds);
 		setSelectedEdgeIds(edgeIds);
-		console.log(edgeIds);
 		// Update single selection state for backwards compatibility
 		setSelectedNodeId(nodeIds.length === 1 ? nodeIds[0] : null);
 		setSelectedEdgeId(edgeIds.length === 1 ? edgeIds[0] : null);

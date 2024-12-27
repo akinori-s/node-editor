@@ -2,7 +2,14 @@ import { useState, useCallback, useRef } from "react";
 import { useStore } from "./store";
 
 export default function NodeEditor() {
-	const { isEditingNodeId, setIsEditingNodeId, nodes, setNodes, isLabelDuplicate } = useStore();
+	const {
+		isEditingNodeId,
+		setIsEditingNodeId,
+		nodes,
+		setNodes,
+		isLabelDuplicate,
+		setNodeLabel,
+	} = useStore();
 	const inputRef = useRef<HTMLInputElement>(null);
 	const [errorNodeID, setErrorNodeID] = useState("");
 
@@ -23,21 +30,7 @@ export default function NodeEditor() {
 			setErrorNodeID(isEditingNodeId);
 			return;
 		}
-		setNodes((nds) =>
-			nds.map((n) => {
-				if (n.id === isEditingNodeId) {
-					return {
-						...n,
-						id: `node-${newLabel}`,
-						data: {
-							...n.data,
-							label: newLabel,
-						},
-					};
-				}
-				return n;
-			})
-		);
+		setNodeLabel(isEditingNodeId, newLabel);
 		setIsEditingNodeId(null);
 		setErrorNodeID("");
 	}, [isEditingNodeId, setNodes, setIsEditingNodeId]);
