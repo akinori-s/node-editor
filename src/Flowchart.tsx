@@ -85,7 +85,6 @@ export default function Flowchart() {
 				markerEnd: { type: MarkerType.ArrowClosed },
 				type: 'smoothstep',
 			};
-			console.log('newEdge:', newEdge);
 			setEdges((prevEdges) => addEdge(newEdge, prevEdges));
 		}
 	}, [selectedNodeIds, setEdges]);
@@ -252,18 +251,18 @@ export default function Flowchart() {
 				nodes={nodes.map((n) => ({
 					...n,
 					style: selectedNodeId == n.id
-						? { outline: "2px solid #ffaf57", backgroundColor: "#fff5e6" }
+						? { outline: "2px solid #2f4eff", backgroundColor: "#eceefa" }
 						: (highlightedNodes.has(n.id)
-							? { outline: "2px solid #ffde85" }
+							? { outline: "2px solid #838cff" }
 							: {}
 						),
 				}))}
 				edges={edges.map((e) => ({
 					...e,
 					style: selectedEdgeId == e.id
-						? { stroke: "#ffaf57", strokeWidth: 2 }
+						? { stroke: "#2f4eff", strokeWidth: 2 }
 						: (highlightedEdges.has(e.id)
-							? { stroke: "#ffde85", strokeWidth: 2 }
+							? { stroke: "#838cff", strokeWidth: 2 }
 							: {}
 						),
 				}))}
