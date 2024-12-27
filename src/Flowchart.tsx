@@ -65,15 +65,30 @@ export default function Flowchart() {
 	}, [setEdges]);
 
 	const onConnect: OnConnect = useCallback((connection: Connection) => {
-		const newEdge: Edge = {
-			id: uuid(),
-			source: connection.source ?? "",
-			target: connection.target ?? "",
-			markerEnd: { type: MarkerType.ArrowClosed },
-			type: 'smoothstep',
-		};
-		setEdges((prevEdges) => addEdge(newEdge, prevEdges));
-	}, [setEdges]);
+		if (selectedNodeIds.length > 1) {
+			const newEdges = selectedNodeIds
+				.filter((nodeId) => nodeId !== connection.target)
+				.map((nodeId) => ({
+					id: uuid(),
+					source: nodeId,
+					target: connection.target ?? "",
+					markerEnd: { type: MarkerType.ArrowClosed },
+					type: 'smoothstep',
+				}));
+			setEdges((prevEdges) => [...prevEdges, ...newEdges]);
+			return;
+		} else {
+			const newEdge: Edge = {
+				id: uuid(),
+				source: connection.source ?? "",
+				target: connection.target ?? "",
+				markerEnd: { type: MarkerType.ArrowClosed },
+				type: 'smoothstep',
+			};
+			console.log('newEdge:', newEdge);
+			setEdges((prevEdges) => addEdge(newEdge, prevEdges));
+		}
+	}, [selectedNodeIds, setEdges]);
 
 	const onReconnect = useCallback((oldEdge: Edge, newConnection: Connection) => {
 		setEdges((edges) => reconnectEdge(oldEdge, newConnection, edges));
