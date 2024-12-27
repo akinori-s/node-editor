@@ -1,9 +1,10 @@
-import { useCallback, useRef } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useStore } from "./store";
 
 export default function NodeEditor() {
-	const { isEditingNodeId, setIsEditingNodeId, nodes, setNodes } = useStore();
+	const { isEditingNodeId, setIsEditingNodeId, nodes, setNodes, isLabelDuplicate } = useStore();
 	const inputRef = useRef<HTMLInputElement>(null);
+	const [errorNodeID, setErrorNodeID] = useState("");
 
 	if (!isEditingNodeId) {
 		return null;
@@ -18,6 +19,10 @@ export default function NodeEditor() {
 	const handleConfirm = useCallback(() => {
 		if (!inputRef.current) return;
 		const newLabel = inputRef.current.value;
+		if (isLabelDuplicate(nodes, newLabel, isEditingNodeId)) {
+			setErrorNodeID(isEditingNodeId);
+			return;
+		}
 		setNodes((nds) =>
 			nds.map((n) => {
 				if (n.id === isEditingNodeId) {
@@ -33,6 +38,7 @@ export default function NodeEditor() {
 			})
 		);
 		setIsEditingNodeId(null);
+		setErrorNodeID("");
 	}, [isEditingNodeId, setNodes, setIsEditingNodeId]);
 
 	// On cancel, just close
@@ -53,6 +59,9 @@ export default function NodeEditor() {
 					defaultValue={nodeToEdit.data?.label}
 					ref={inputRef}
 				/>
+				{errorNodeID === isEditingNodeId && (
+					<div className="text-red-500 text-sm mb-2">Duplicate label</div>
+				)}
 				<div className="flex justify-end space-x-2">
 					<button
 						onClick={handleCancel}

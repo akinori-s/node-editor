@@ -12,9 +12,10 @@ interface SidebarProps {
  * optionally sorted by alphabetical order or creation order.
  */
 export default function Sidebar({ searchQuery, sortMethod }: SidebarProps) {
-	const { nodes, selectedNodeId, setSelectedNodeId, setSelectedEdgeId, setHighlightedElements, setNodes } = useStore();
+	const { nodes, selectedNodeId, setSelectedNodeId, setSelectedEdgeId, setHighlightedElements, setNodes, isLabelDuplicate } = useStore();
 	const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
 	const [editValue, setEditValue] = useState("");
+	const [errorNodeID, setErrorNodeID] = useState("");
 
 	// Filter nodes by the search query:
 	const filteredNodes = useMemo(() => {
@@ -50,6 +51,11 @@ export default function Sidebar({ searchQuery, sortMethod }: SidebarProps) {
 		});
 	};
 
+	const handleEditValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setEditValue(e.target.value);
+		setErrorNodeID("");
+	}
+
 	const handleDoubleClick = (nodeId: string, currentLabel: string) => {
 		setEditingNodeId(nodeId);
 		setEditValue(currentLabel);
@@ -57,6 +63,10 @@ export default function Sidebar({ searchQuery, sortMethod }: SidebarProps) {
 
 	const handleSave = () => {
 		if (editingNodeId) {
+			if (isLabelDuplicate(nodes, editValue, editingNodeId)) {
+				setErrorNodeID(editingNodeId);
+				return;
+			}
 			setNodes((nodes) =>
 				nodes.map((node) =>
 					node.id === editingNodeId
@@ -65,6 +75,7 @@ export default function Sidebar({ searchQuery, sortMethod }: SidebarProps) {
 				)
 			);
 			setEditingNodeId(null);
+			setErrorNodeID("");
 		}
 	};
 
@@ -87,7 +98,7 @@ export default function Sidebar({ searchQuery, sortMethod }: SidebarProps) {
 						<input
 							type="text"
 							value={editValue}
-							onChange={(e) => setEditValue(e.target.value)}
+							onChange={handleEditValueChange}
 							onBlur={handleSave}
 							onKeyDown={(e) => {
 								if (e.key === "Enter") {
@@ -103,6 +114,7 @@ export default function Sidebar({ searchQuery, sortMethod }: SidebarProps) {
 					) : (
 						node.data?.label
 					)}
+					{errorNodeID === node.id && <div className="text-red-500 text-sm">Duplicate label</div>}
 				</div>
 			))}
 		</div>

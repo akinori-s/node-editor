@@ -26,6 +26,7 @@ import { useStore } from "./store";
 import { getUpstreamAndDownstream } from "./graphUtils";
 import NodeEditor from "./NodeEditor";
 import { FlowNodeData } from "./types";
+import { importFlowData, exportToFile } from './flowchartUtils';
 
 export default function Flowchart() {
 	const {
@@ -64,7 +65,7 @@ export default function Flowchart() {
 
 	const onConnect: OnConnect = useCallback((connection: Connection) => {
 		const newEdge: Edge = {
-			id: `edge-${connection.source}-${connection.sourceHandle}-${connection.target}-${connection.targetHandle}`,
+			id: `edge-${connection.source}-${connection.target}`,
 			source: connection.source ?? "",
 			target: connection.target ?? "",
 			markerEnd: { type: MarkerType.ArrowClosed },
@@ -114,8 +115,8 @@ export default function Flowchart() {
 	}, [setSelectedEdgeId, setSelectedNodeId, setHighlightedElements]);
 
 	const handleNodeDoubleClick = useCallback((_: any, node: Node<FlowNodeData>) => {
-	// Open editor for that node
-	setIsEditingNodeId(node.id);
+		// Open editor for that node
+		setIsEditingNodeId(node.id);
 	}, [setIsEditingNodeId]);
 
 	// --- Keyboard (Delete Key) ---
@@ -159,10 +160,71 @@ export default function Flowchart() {
 		setSelectedEdgeId(edgeIds.length === 1 ? edgeIds[0] : null);
 	}, [setSelectedNodeIds, setSelectedEdgeIds, setSelectedNodeId, setSelectedEdgeId]);
 
+	const handleExport = () => {
+		try {
+			exportToFile(nodes, edges);
+		} catch (error) {
+			console.error('Export failed:', error);
+			alert(`Export failed: ${error}`);
+			// Add error notification if you have a notification system
+		}
+	};
+
+	const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+		const file = event.target.files?.[0];
+		if (!file) return;
+
+		event.target.value = '';
+
+		// Show confirmation dialog if there are existing nodes/edges
+		if (nodes.length > 0 || edges.length > 0) {
+			const confirmed = window.confirm(
+				'Warning: Importing will overwrite all existing nodes and connections. Do you want to proceed?'
+			);
+			if (!confirmed) return;
+		}
+
+		try {
+			const reader = new FileReader();
+			reader.onload = (event) => {
+				const jsonData = JSON.parse(event.target?.result as string);
+				const { nodes: newNodes, edges: newEdges } = importFlowData(jsonData);
+				setNodes(() => newNodes);
+				setEdges(() => newEdges);
+			};
+			reader.readAsText(file);
+		} catch (error) {
+			console.error('Import failed:', error);
+			alert(`Import failed:' ${error}`);
+			// Add error notification if you have a notification system
+		}
+	};
+
 	return (
 		<div className="w-full h-full" onKeyDown={onKeyDown} tabIndex={0}>
 			{/* Button to add a node */}
-			<div className="absolute top-2 right-2 z-10">
+			<div className="absolute top-2 right-2 z-10 flex gap-2">
+				<button
+					onClick={handleExport}
+					className="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700"
+				>
+					Export
+				</button>
+				<input
+					type="file"
+					id="import-json"
+					className="hidden"
+					accept=".json"
+					onChange={handleImport}
+				/>
+
+				<button
+					onClick={() => document.getElementById('import-json')?.click()}
+					className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700"
+				>
+					Import
+				</button>
+
 				<button
 					onClick={addNewNode}
 					className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700"

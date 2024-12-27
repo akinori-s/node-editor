@@ -19,13 +19,27 @@ interface AppState {
 	setSelectedNodeId: (nodeId: string | null) => void;
 	setSelectedEdgeId: (edgeId: string | null) => void;
 	setIsEditingNodeId: (nodeId: string | null) => void;
-	setSelectedNodeIds: (nodeIds: string[] ) => void;
-	setSelectedEdgeIds: (edgeIds: string[] ) => void;
+	setSelectedNodeIds: (nodeIds: string[]) => void;
+	setSelectedEdgeIds: (edgeIds: string[]) => void;
 	setHighlightedElements: (payload: { nodes: Set<string>; edges: Set<string> }) => void;
 
 	onAddNode: (position: XYPosition) => void;
 	onDeleteSelected: () => void;
+	isLabelDuplicate: (nodes: Node[], label: string, excludeNodeId?: string) => boolean;
 }
+
+const getNextNodeName = (nodes: Node<FlowNodeData>[]): string => {
+	const baseLabel = "New Node";
+	const existingLabels = new Set(nodes.map(node => node.data.label));
+
+	if (!existingLabels.has(baseLabel)) return baseLabel;
+
+	let counter = 2;
+	while (existingLabels.has(`${baseLabel} ${counter}`)) {
+		counter++;
+	}
+	return `${baseLabel} ${counter}`;
+};
 
 export const useStore = create<AppState>((set) => ({
 	nodes: [],
@@ -65,19 +79,22 @@ export const useStore = create<AppState>((set) => ({
 
 	// Add a new node at a given position
 	onAddNode: (position: XYPosition) => {
-		const newNode: Node<FlowNodeData> = {
-			id: uuid(),
-			position,
-			data: {
-				label: "New Node",
-			},
-			type: "default",
-			sourcePosition: Position.Right,
-			targetPosition: Position.Left,
-		};
-		set((state) => ({
-			nodes: [...state.nodes, newNode],
-		}));
+		set((state) => {
+			const nodeLabel = getNextNodeName(state.nodes);
+			const newNode: Node<FlowNodeData> = {
+				id: `node-${nodeLabel}`,
+				position,
+				data: {
+					label: nodeLabel,
+				},
+				type: "default",
+				sourcePosition: Position.Right,
+				targetPosition: Position.Left,
+			};
+			return {
+				nodes: [...state.nodes, newNode],
+			};
+		});
 	},
 
 	onDeleteSelected: () => set((state) => {
@@ -86,8 +103,8 @@ export const useStore = create<AppState>((set) => ({
 		);
 		const remainingEdges = state.edges.filter(
 			edge => !state.selectedEdgeIds.includes(edge.id) &&
-			!state.selectedNodeIds.includes(edge.source) &&
-			!state.selectedNodeIds.includes(edge.target)
+				!state.selectedNodeIds.includes(edge.source) &&
+				!state.selectedNodeIds.includes(edge.target)
 		);
 
 		return {
@@ -101,4 +118,10 @@ export const useStore = create<AppState>((set) => ({
 			highlightedEdges: new Set()
 		};
 	}),
+
+	isLabelDuplicate: (nodes: Node[], label: string, excludeNodeId?: string) => {
+		return nodes.some(node =>
+			node.data.label === label && node.id !== excludeNodeId
+		);
+	},
 }));

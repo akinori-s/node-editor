@@ -1,5 +1,4 @@
 - highlight multiple nodes and edges when they are selected using shift click
-- delete all nodes and edges that are selected
 - create a new edge for each node that is selected when creating an edge
 - implement an undo feature
 - 
