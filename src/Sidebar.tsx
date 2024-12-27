@@ -70,7 +70,11 @@ export default function Sidebar({ searchQuery, sortMethod }: SidebarProps) {
 			setNodes((nodes) =>
 				nodes.map((node) =>
 					node.id === editingNodeId
-						? { ...node, data: { ...node.data, label: editValue } }
+						? {
+							...node,
+							id: `node-${editValue}`,
+							data: { ...node.data, label: editValue }
+						}
 						: node
 				)
 			);

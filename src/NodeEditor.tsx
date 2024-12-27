@@ -28,6 +28,7 @@ export default function NodeEditor() {
 				if (n.id === isEditingNodeId) {
 					return {
 						...n,
+						id: `node-${newLabel}`,
 						data: {
 							...n.data,
 							label: newLabel,
