@@ -58,6 +58,13 @@ export default function NodeEditor() {
 					className="w-full border border-gray-300 rounded px-2 py-1 mb-2"
 					defaultValue={nodeToEdit.data?.label}
 					ref={inputRef}
+					onKeyDown={(e) => {
+						if (e.key === "Enter") {
+							handleConfirm();
+						} else if (e.key === "Escape") {
+							handleCancel();
+						}
+					}}
 				/>
 				{errorNodeID === isEditingNodeId && (
 					<div className="text-red-500 text-sm mb-2">Duplicate label</div>
