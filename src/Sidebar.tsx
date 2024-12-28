@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useStore } from "./store";
 import { getUpstreamAndDownstream } from "./graphUtils";
-import { ArrowDownUp, Command, Settings } from "lucide-react"
+import { ArrowDownUp, Command as CommandIcon, PanelRightOpen, Settings, SquareChevronRight, SquareMinus } from "lucide-react"
 import {
 	Sidebar,
 	SidebarContent,
@@ -25,6 +25,18 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select"
+import {
+	HoverCard,
+	HoverCardContent,
+	HoverCardTrigger,
+} from "@/components/ui/hover-card"
+import {
+	Command,
+	CommandGroup,
+	CommandItem,
+	CommandList,
+	CommandShortcut,
+} from "@/components/ui/command"
 
 /**
  * Sidebar lists all nodes. Filtered by search query and
@@ -186,14 +198,41 @@ export default function AppSidebar() {
 			</SidebarContent>
 			<SidebarFooter>
 				<SidebarMenu>
-					<SidebarMenuItem>
-						<SidebarMenuButton asChild>
-							<div>
-								<Command />
-								<span>Shortcuts</span>
-							</div>
-						</SidebarMenuButton>
-					</SidebarMenuItem>
+					<HoverCard>
+						<HoverCardTrigger asChild>
+							<SidebarMenuItem>
+								<SidebarMenuButton asChild>
+									<div>
+										<CommandIcon />
+										<span>Shortcuts</span>
+									</div>
+								</SidebarMenuButton>
+							</SidebarMenuItem>
+						</HoverCardTrigger>
+						<HoverCardContent className="p-0 shadow-none border-none">
+							<Command className="rounded-lg border shadow-md md:min-w-[450px]">
+								<CommandList>
+									<CommandGroup heading="Shortcuts">
+										<CommandItem>
+											<PanelRightOpen />
+											<span>Open and close sidebar</span>
+											<CommandShortcut>⌘Ctrl + b</CommandShortcut>
+										</CommandItem>
+										<CommandItem>
+											<SquareChevronRight />
+											<span>Save node changes</span>
+											<CommandShortcut>⌘Enter</CommandShortcut>
+										</CommandItem>
+										<CommandItem>
+											<SquareMinus />
+											<span>Cancel node changes</span>
+											<CommandShortcut>⌘Esc</CommandShortcut>
+										</CommandItem>
+									</CommandGroup>
+								</CommandList>
+							</Command>
+						</HoverCardContent>
+					</HoverCard>
 					<SidebarMenuItem>
 						<SidebarMenuButton asChild>
 							<div>
