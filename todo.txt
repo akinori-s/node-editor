@@ -1,3 +1,4 @@
+- fix sidebar
 - highlight multiple nodes and edges when they are selected using shift click
 - implement an undo feature
-- 
+- sidebar that becomes slightly transparent when unused, or just a semi transparent inset sidebar
