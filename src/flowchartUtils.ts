@@ -62,4 +62,5 @@ export const exportToFile = (nodes: Node[], edges: Edge[]) => {
     a.download = 'flowchart.json';
     a.click();
     URL.revokeObjectURL(url);
+    a.remove();
 };

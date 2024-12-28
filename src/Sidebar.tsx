@@ -26,7 +26,6 @@ import {
 	SelectValue,
 } from "@/components/ui/select"
 
-
 /**
  * Sidebar lists all nodes. Filtered by search query and
  * optionally sorted by alphabetical order or creation order.

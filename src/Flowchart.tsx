@@ -231,14 +231,12 @@ export default function Flowchart() {
 					accept=".json"
 					onChange={handleImport}
 				/>
-
 				<button
 					onClick={() => document.getElementById('import-json')?.click()}
 					className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700"
 				>
 					Import
 				</button>
-
 				<button
 					onClick={addNewNode}
 					className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700"
