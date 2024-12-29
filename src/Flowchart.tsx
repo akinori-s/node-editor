@@ -27,6 +27,7 @@ import { getUpstreamAndDownstream } from "./graphUtils";
 import NodeEditor from "./NodeEditor";
 import { FlowNodeData } from "./types";
 import { v4 as uuid } from "uuid";
+import { Button } from "@/components/ui/button"
 
 export default function Flowchart() {
 	const {
@@ -176,13 +177,13 @@ export default function Flowchart() {
 	return (
 		<div className="w-full h-full" onKeyDown={onKeyDown} tabIndex={0}>
 			{/* Button to add a node */}
-			<div className="absolute top-2 right-2 z-10 flex gap-2">
-				<button
+			<div className="absolute top-4 right-4 z-10 flex gap-2">
+				<Button
 					onClick={addNewNode}
-					className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700"
+					// className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700"
 				>
 					Add Node
-				</button>
+				</Button>
 			</div>
 
 			<ReactFlow
