@@ -1,4 +1,8 @@
 - fix sidebar
-- highlight multiple nodes and edges when they are selected using shift click
+- add resizable nodes
 - implement an undo feature
+- add node types for categorization
+  - manage node types in sidebar with collasible groups
+- add more fields to nodes like subtitles / explanations etc
+- highlight multiple nodes and edges when they are selected using shift click
 - sidebar that becomes slightly transparent when unused, or just a semi transparent inset sidebar
