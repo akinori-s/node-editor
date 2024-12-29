@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { useStore } from "./store";
 import { getUpstreamAndDownstream } from "./graphUtils";
-import { ArrowDownUp, Command as CommandIcon, PanelRightOpen, Settings, SquareChevronRight, SquareMinus } from "lucide-react"
+import { importFlowData, exportToFile } from './flowchartUtils';
+import { ArrowDownUp, Command as CommandIcon, FolderInput, FolderOutput, PanelRightOpen, Settings, SquareChevronRight, SquareMinus } from "lucide-react"
 import {
 	Sidebar,
 	SidebarContent,
@@ -13,6 +14,7 @@ import {
 	SidebarMenu,
 	SidebarMenuItem,
 	SidebarMenuButton,
+	SidebarSeparator,
 } from "@/components/ui/sidebar"
 import {
 	Input,
@@ -45,6 +47,9 @@ import {
 export default function AppSidebar() {
 	const {
 		nodes,
+		edges,
+		setNodes,
+		setEdges,
 		selectedNodeId,
 		setSelectedNodeId,
 		setSelectedEdgeId,
@@ -117,6 +122,46 @@ export default function AppSidebar() {
 	const handleCancel = () => {
 		setEditingNodeId(null);
 		setEditValue("");
+	};
+
+	const handleExport = () => {
+		try {
+			exportToFile(nodes, edges);
+		} catch (error) {
+			console.error('Export failed:', error);
+			alert(`Export failed: ${error}`);
+			// Add error notification if you have a notification system
+		}
+	};
+
+	const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+		const file = event.target.files?.[0];
+		if (!file) return;
+
+		event.target.value = '';
+
+		// Show confirmation dialog if there are existing nodes/edges
+		if (nodes.length > 0 || edges.length > 0) {
+			const confirmed = window.confirm(
+				'Warning: Importing will overwrite all existing nodes and connections. Do you want to proceed?'
+			);
+			if (!confirmed) return;
+		}
+
+		try {
+			const reader = new FileReader();
+			reader.onload = (event) => {
+				const jsonData = JSON.parse(event.target?.result as string);
+				const { nodes: newNodes, edges: newEdges } = importFlowData(jsonData);
+				setNodes(() => newNodes);
+				setEdges(() => newEdges);
+			};
+			reader.readAsText(file);
+		} catch (error) {
+			console.error('Import failed:', error);
+			alert(`Import failed:' ${error}`);
+			// Add error notification if you have a notification system
+		}
 	};
 
 	return (
@@ -197,6 +242,32 @@ export default function AppSidebar() {
 				</SidebarGroup>
 			</SidebarContent>
 			<SidebarFooter>
+				<SidebarMenu>
+					<SidebarMenuItem>
+						<SidebarMenuButton asChild>
+							<button onClick={() => document.getElementById('import-json')?.click()}>
+								<FolderInput />
+								<span>Import</span>
+							</button>
+						</SidebarMenuButton>
+						<input
+							type="file"
+							id="import-json"
+							className="hidden"
+							accept=".json"
+							onChange={handleImport}
+						/>
+					</SidebarMenuItem>
+					<SidebarMenuItem>
+						<SidebarMenuButton asChild>
+							<button onClick={handleExport}>
+								<FolderOutput />
+								<span>Export</span>
+							</button>
+						</SidebarMenuButton>
+					</SidebarMenuItem>
+				</SidebarMenu>
+				<SidebarSeparator />
 				<SidebarMenu>
 					<HoverCard>
 						<HoverCardTrigger asChild>
