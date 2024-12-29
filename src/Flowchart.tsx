@@ -169,6 +169,9 @@ export default function Flowchart() {
 
 		setSelectedNodeIds(nodeIds);
 		setSelectedEdgeIds(edgeIds);
+		if (params.edges.length === 0 && params.nodes.length === 0) {
+			setHighlightedElements({ nodes: new Set(), edges: new Set() });
+		}
 		// Update single selection state for backwards compatibility
 		setSelectedNodeId(nodeIds.length === 1 ? nodeIds[0] : null);
 		setSelectedEdgeId(edgeIds.length === 1 ? edgeIds[0] : null);
@@ -180,7 +183,7 @@ export default function Flowchart() {
 			<div className="absolute top-4 right-4 z-10 flex gap-2">
 				<Button
 					onClick={addNewNode}
-					// className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700"
+				// className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700"
 				>
 					Add Node
 				</Button>
@@ -220,7 +223,7 @@ export default function Flowchart() {
 				fitView
 				fitViewOptions={{ padding: 0.2 }}
 				snapToGrid
-				snapGrid={[20, 20]}
+				snapGrid={[10, 10]}
 				panOnDrag
 				multiSelectionKeyCode={["ShiftLeft", "ShiftRight"]}
 				nodesDraggable

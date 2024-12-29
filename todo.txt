@@ -3,6 +3,7 @@
 - implement an undo feature
 - add node types for categorization
   - manage node types in sidebar with collasible groups
+- copy and paste node feature
 - add more fields to nodes like subtitles / explanations etc
 - highlight multiple nodes and edges when they are selected using shift click
 - sidebar that becomes slightly transparent when unused, or just a semi transparent inset sidebar
