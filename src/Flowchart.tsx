@@ -1,24 +1,24 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback } from "react";
 import ReactFlow, {
+	addEdge,
 	applyNodeChanges,
 	applyEdgeChanges,
-	addEdge,
+	reconnectEdge,
 	Background,
-	Connection,
-	Edge,
 	MarkerType,
 	MiniMap,
-	Node,
-	OnConnect,
-	OnEdgesDelete,
-	OnNodesDelete,
-	OnNodesChange,
-	OnEdgesChange,
-	reconnectEdge,
-	ReactFlowInstance,
 	Controls,
 	OnSelectionChangeParams,
 	SelectionMode,
+	type XYPosition,
+	type Node,
+	type Edge,
+	type Connection,
+	type OnConnect,
+	type OnEdgesDelete,
+	type OnNodesDelete,
+	type OnNodesChange,
+	type OnEdgesChange,
 } from "reactflow";
 import "reactflow/dist/style.css";
 
@@ -51,8 +51,6 @@ export default function Flowchart() {
 		setSelectedNodeIds,
 		setSelectedEdgeIds,
 	} = useStore();
-
-	const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
 
 	// --- Node & Edge Change Handlers ---
 
@@ -157,10 +155,9 @@ export default function Flowchart() {
 
 	// --- Add Node ---
 	const addNewNode = useCallback(() => {
-		if (!reactFlowInstance) return;
-		const position = reactFlowInstance.screenToFlowPosition({ x: 1000, y: 500 });
+		const position: XYPosition = { x: 1000, y: 500 };
 		onAddNode(position);
-	}, [onAddNode, reactFlowInstance]);
+	}, [onAddNode]);
 
 	// --- Selection Change Handler ---
 	const onSelectionChange = useCallback((params: OnSelectionChangeParams) => {
@@ -217,7 +214,6 @@ export default function Flowchart() {
 				onNodeClick={handleNodeClick}
 				onEdgeClick={handleEdgeClick}
 				onNodeDoubleClick={handleNodeDoubleClick}
-				onInit={setReactFlowInstance}
 				onSelectionChange={onSelectionChange}
 				selectionMode={SelectionMode.Full}
 				fitView
