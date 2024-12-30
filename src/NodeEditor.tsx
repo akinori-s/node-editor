@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useStore } from "./store";
 
 export default function NodeEditor() {
@@ -21,6 +21,12 @@ export default function NodeEditor() {
 	if (!nodeToEdit) {
 		return null;
 	}
+
+	useEffect(() => {
+		if (isEditingNodeId && inputRef.current) {
+			inputRef.current.focus();
+		}
+	}, [isEditingNodeId]);
 
 	// On confirm, update the node label
 	const handleConfirm = useCallback(() => {
