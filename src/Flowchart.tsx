@@ -134,6 +134,10 @@ export default function Flowchart() {
 
 	// --- Keyboard (Delete Key) ---
 	const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+		const { isEditingNodeId } = useStore.getState();
+		if (isEditingNodeId) {
+			return ;
+		}
 		if (e.key === "Delete") {
 			if (selectedNodeIds.length > 0 || selectedEdgeIds.length > 0) {
 				onDeleteSelected();
