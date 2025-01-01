@@ -25,9 +25,14 @@ import "reactflow/dist/style.css";
 import { useStore } from "./store";
 import { getUpstreamAndDownstream } from "./graphUtils";
 import NodeEditor from "./NodeEditor";
+import MultiLabelNode from "./MultiLabelNode";
 import { FlowNodeData } from "./types";
 import { v4 as uuid } from "uuid";
 import { Button } from "@/components/ui/button"
+
+const nodeTypes = {
+	multiLabelNode: MultiLabelNode,
+};
 
 export default function Flowchart() {
 	const {
@@ -193,6 +198,7 @@ export default function Flowchart() {
 			<ReactFlow
 				nodes={nodes.map((n) => ({
 					...n,
+					className: "rounded-md",
 					style: selectedNodeId == n.id
 						? { outline: "2px solid #2f4eff", backgroundColor: "#eceefa" }
 						: (highlightedNodes.has(n.id)
@@ -209,6 +215,7 @@ export default function Flowchart() {
 							: {}
 						),
 				}))}
+				nodeTypes={nodeTypes}
 				onNodesChange={onNodesChange}
 				onEdgesChange={onEdgesChange}
 				onConnect={onConnect}

@@ -88,7 +88,7 @@ export const useStore = create<AppState>((set) => ({
 				data: {
 					label: nodeLabel,
 				},
-				type: "default",
+				type: "multiLabelNode",
 				sourcePosition: Position.Right,
 				targetPosition: Position.Left,
 			};
