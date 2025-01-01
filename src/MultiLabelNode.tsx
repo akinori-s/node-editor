@@ -1,24 +1,133 @@
-import { memo } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Handle, Position, NodeProps } from "reactflow";
+import { useStore } from "./store";
 
-interface MultiLabelNodeProps extends NodeProps<{
+export interface MultiLabelNodeProps {
 	label: string;
 	sublabel1: string;
 	sublabel2: string;
-}> { }
+}
 
-function MultiLabelNode({ data }: MultiLabelNodeProps) {
+function MultiLabelNode({ id, data }: NodeProps<MultiLabelNodeProps>) {
+	const nodeContainerRef = useRef<HTMLDivElement>(null);
+	const [errorNodeID, setErrorNodeID] = useState("");
+	const [values, setValues] = useState({
+		label: data.label,
+		sublabel1: data.sublabel1,
+		sublabel2: data.sublabel2,
+	});
+	const {
+		isEditingNodeId,
+		setIsEditingNodeId,
+		nodes,
+		setNodes,
+		isLabelDuplicate,
+		setNodeData,
+	} = useStore();
+
+	useEffect(() => {
+		function handleClickOutside(e: MouseEvent) {
+			// If click is NOT inside our node container...
+			console.log("values", values);
+
+			if (
+				nodeContainerRef.current &&
+				!nodeContainerRef.current.contains(e.target as Node)
+			) {
+				// ... then exit editing mode
+				if (!isEditingNodeId) return;
+				if (isLabelDuplicate(nodes, values.label, isEditingNodeId)) {
+					setErrorNodeID(isEditingNodeId);
+					return;
+				}
+				setNodeData(isEditingNodeId, values);
+				setIsEditingNodeId(null);
+				setErrorNodeID("");
+			}
+		}
+
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => document.removeEventListener("mousedown", handleClickOutside);
+	}, [id, isEditingNodeId, setIsEditingNodeId]);
+
+	const handleDoubleClick = () => {
+		setIsEditingNodeId(id);
+	};
+
+	const handleChange = (field: keyof typeof values) => (e: React.ChangeEvent<HTMLInputElement>) => {
+		if (!isEditingNodeId) return;
+		setValues(prev => ({ ...prev, [field]: e.target.value }));
+		if (isLabelDuplicate(nodes, e.target.value, isEditingNodeId)) {
+			setErrorNodeID(isEditingNodeId);
+			return;
+		}
+		setNodeData(id, { ...values, [field]: e.target.value });
+		setErrorNodeID("");
+	};
+
+	const handleKeyDown = (e: React.KeyboardEvent) => {
+		e.stopPropagation();
+		if (e.key === 'Enter') {
+			handleConfirm();
+		}
+	};
+
+	// On confirm, update the node label
+	const handleConfirm = useCallback(() => {
+		if (!isEditingNodeId) return;
+		if (isLabelDuplicate(nodes, values.label, isEditingNodeId)) {
+			setErrorNodeID(isEditingNodeId);
+			return;
+		}
+		setNodeData(isEditingNodeId, values);
+		setIsEditingNodeId(null);
+		setErrorNodeID("");
+	}, [values, isEditingNodeId, setNodes, setNodeData, setIsEditingNodeId]);
 
 	return (
-		<div className="flex flex-col px-2 py-1 min-w-48 max-w-96 bg-white border border-black rounded-md text-black">
-			{/* The default “label” field */}
-			<div className="text-xs text-slate-400 text-left">{data.sublabel1 || "N/A"}</div>
+		<div
+			className="flex flex-col px-4 py-2 min-w-48 max-w-96 bg-white border border-black rounded-md text-black"
+			ref={nodeContainerRef}
+			onDoubleClick={handleDoubleClick}
+		// tabIndex={0}
+		>
+			{id === isEditingNodeId ? (
+				<>
+					<input
+						className="break-words text-xs text-slate-400 text-center border border-slate-300 rounded-t focus:outline-none"
+						value={values.sublabel1}
+						onChange={handleChange('sublabel1')}
+						onKeyDown={handleKeyDown}
+						autoFocus
+					/>
+					<input
+						className="break-words text-sm text-center border-x border-slate-300 focus:outline-none"
+						value={values.label}
+						onChange={handleChange('label')}
+						onKeyDown={handleKeyDown}
+					/>
+					<input
+						className="break-words text-xs text-slate-600 text-center border border-slate-300 rounded-b focus:outline-none"
+						value={values.sublabel2}
+						onChange={handleChange('sublabel2')}
+						onKeyDown={handleKeyDown}
+					/>
+					{errorNodeID === isEditingNodeId && (
+						<div className="text-center text-red-500 text-xs">Duplicate label</div>
+					)}
+				</>
+			) : (
+				<>
+					{/* The default “label” field */}
+					<div className="break-words text-xs text-slate-400 text-center">{data.sublabel1 || "N/A"}</div>
 
-			{/* Additional fields */}
-			<div className="text-sm text-center">{data.label || "N/A"}</div>
-			<div className="text-sm text-center">{data.sublabel2 || "N/A"}</div>
+					{/* Additional fields */}
+					<div className="break-words text-sm text-center">{data.label || "N/A"}</div>
+					<div className="break-words text-xs text-slate-600 text-center">{data.sublabel2 || "N/A"}</div>
 
-			{/* Example: add default handles for edges */}
+					{/* Example: add default handles for edges */}
+				</>
+			)}
 			<Handle
 				type="target"
 				position={Position.Left}

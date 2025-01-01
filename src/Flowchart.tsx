@@ -24,7 +24,7 @@ import "reactflow/dist/style.css";
 
 import { useStore } from "./store";
 import { getUpstreamAndDownstream } from "./graphUtils";
-import NodeEditor from "./NodeEditor";
+// import NodeEditor from "./NodeEditor";
 import MultiLabelNode from "./MultiLabelNode";
 import { FlowNodeData } from "./types";
 import { v4 as uuid } from "uuid";
@@ -71,7 +71,7 @@ export default function Flowchart() {
 		setSelectedNodeId,
 		selectedEdgeId,
 		setSelectedEdgeId,
-		isEditingNodeId,
+		// isEditingNodeId,
 		highlightedNodes,
 		highlightedEdges,
 		setIsEditingNodeId,
@@ -202,6 +202,7 @@ export default function Flowchart() {
 		setSelectedNodeIds(nodeIds);
 		setSelectedEdgeIds(edgeIds);
 		if (params.edges.length === 0 && params.nodes.length === 0) {
+			setIsEditingNodeId(null);
 			setHighlightedElements({ nodes: new Set(), edges: new Set() });
 		}
 		// Update single selection state for backwards compatibility
@@ -276,7 +277,7 @@ export default function Flowchart() {
 			</ReactFlow>
 
 			{/* Editor Modal if isEditingNodeId is set */}
-			{isEditingNodeId !== null && <NodeEditor />}
-		</div>
+			{/* {isEditingNodeId !== null && <NodeEditor />} */}
+		</div >
 	);
 }

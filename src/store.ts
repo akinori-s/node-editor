@@ -1,10 +1,10 @@
 import { create } from "zustand";
 import { Edge, Node, XYPosition, Position } from "reactflow";
-import { FlowNodeData } from "./types";
+import { MultiLabelNodeProps } from "./MultiLabelNode";
 import { v4 as uuid } from "uuid";
 
 interface AppState {
-	nodes: Node<FlowNodeData>[];
+	nodes: Node<MultiLabelNodeProps>[];
 	edges: Edge[];
 	selectedNodeId: string | null;
 	selectedEdgeId: string | null;
@@ -14,7 +14,7 @@ interface AppState {
 	selectedNodeIds: string[];
 	selectedEdgeIds: string[];
 
-	setNodes: (setter: (nodes: Node<FlowNodeData>[]) => Node<FlowNodeData>[] | void) => void;
+	setNodes: (setter: (nodes: Node<MultiLabelNodeProps>[]) => Node<MultiLabelNodeProps>[] | void) => void;
 	setEdges: (setter: (edges: Edge[]) => Edge[] | void) => void;
 	setSelectedNodeId: (nodeId: string | null) => void;
 	setSelectedEdgeId: (edgeId: string | null) => void;
@@ -26,10 +26,10 @@ interface AppState {
 	onAddNode: (position: XYPosition) => void;
 	onDeleteSelected: () => void;
 	isLabelDuplicate: (nodes: Node[], label: string, excludeNodeId?: string) => boolean;
-	setNodeLabel: (nodeId: string, nodeLabel: string) => void;
+	setNodeData: (nodeId: string, nodeLabel: any) => void;
 }
 
-const getNextNodeName = (nodes: Node<FlowNodeData>[]): string => {
+const getNextNodeName = (nodes: Node<MultiLabelNodeProps>[]): string => {
 	const baseLabel = "New Node";
 	const existingLabels = new Set(nodes.map(node => node.data.label));
 
@@ -82,11 +82,13 @@ export const useStore = create<AppState>((set) => ({
 	onAddNode: (position: XYPosition) => {
 		set((state) => {
 			const nodeLabel = getNextNodeName(state.nodes);
-			const newNode: Node<FlowNodeData> = {
+			const newNode: Node<MultiLabelNodeProps> = {
 				id: uuid(),
 				position,
 				data: {
 					label: nodeLabel,
+					sublabel1: "sub-label 1",
+					sublabel2: "sub-label 2",
 				},
 				type: "multiLabelNode",
 				sourcePosition: Position.Right,
@@ -126,13 +128,13 @@ export const useStore = create<AppState>((set) => ({
 		);
 	},
 
-	setNodeLabel: (nodeId: string, nodeLabel: string) => {
+	setNodeData: (nodeId: string, nodeData: any) => {
 		set((state) => {
 			const updatedNodes = state.nodes.map(node =>
 				node.id === nodeId
 					? {
 						...node,
-						data: { label: nodeLabel }
+						data: { ...nodeData }
 					}
 					: node
 			);

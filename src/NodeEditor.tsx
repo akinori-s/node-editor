@@ -8,7 +8,7 @@ export default function NodeEditor() {
 		nodes,
 		setNodes,
 		isLabelDuplicate,
-		setNodeLabel,
+		setNodeData,
 	} = useStore();
 	const inputRef = useRef<HTMLInputElement>(null);
 	const [errorNodeID, setErrorNodeID] = useState("");
@@ -36,7 +36,7 @@ export default function NodeEditor() {
 			setErrorNodeID(isEditingNodeId);
 			return;
 		}
-		setNodeLabel(isEditingNodeId, newLabel);
+		setNodeData(isEditingNodeId, newLabel);
 		setIsEditingNodeId(null);
 		setErrorNodeID("");
 	}, [isEditingNodeId, setNodes, setIsEditingNodeId]);
