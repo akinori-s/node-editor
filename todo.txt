@@ -1,5 +1,5 @@
+- read-only mode
 - fix sidebar
-- add resizable nodes
 - implement an undo feature
 - add node types for categorization
   - manage node types in sidebar with collasible groups

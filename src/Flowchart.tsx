@@ -30,6 +30,32 @@ import { FlowNodeData } from "./types";
 import { v4 as uuid } from "uuid";
 import { Button } from "@/components/ui/button"
 
+const SELECTED_BG = "#eceefa";
+const SELECTED_COLOR = "#2f4eff";
+const SELECTED_ZINDEX = 2;
+const HIGHLIGHTED_COLOR = "#838cff";
+const HIGHLIGHTED_ZINDEX = 1;
+const BASE_ZINDEX = 0;
+const baseEdgeStyle = { strokeWidth: 3 };
+const baseMarker = { type: MarkerType.ArrowClosed };
+
+const nodeStyles = {
+	base: { className: "rounded-md" },
+	selected: {
+		outline: `2px solid ${SELECTED_COLOR}`,
+		backgroundColor: SELECTED_BG,
+		zIndex: SELECTED_ZINDEX
+	},
+	highlighted: {
+		outline: `2px solid ${HIGHLIGHTED_COLOR}`,
+		zIndex: HIGHLIGHTED_ZINDEX
+	}
+};
+const edgeStyles = {
+	selected: { stroke: SELECTED_COLOR, strokeWidth: 4 },
+	highlighted: { stroke: HIGHLIGHTED_COLOR }
+};
+
 const nodeTypes = {
 	multiLabelNode: MultiLabelNode,
 };
@@ -185,11 +211,9 @@ export default function Flowchart() {
 
 	return (
 		<div className="w-full h-full" onKeyDown={onKeyDown} tabIndex={0}>
-			{/* Button to add a node */}
 			<div className="absolute top-4 right-4 z-10 flex gap-2">
 				<Button
 					onClick={addNewNode}
-				// className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700"
 				>
 					Add Node
 				</Button>
@@ -198,22 +222,32 @@ export default function Flowchart() {
 			<ReactFlow
 				nodes={nodes.map((n) => ({
 					...n,
-					className: "rounded-md",
-					style: selectedNodeId == n.id
-						? { outline: "2px solid #2f4eff", backgroundColor: "#eceefa" }
-						: (highlightedNodes.has(n.id)
-							? { outline: "2px solid #838cff" }
+					...nodeStyles.base,
+					style: selectedNodeId === n.id
+						? nodeStyles.selected
+						: highlightedNodes.has(n.id)
+							? nodeStyles.highlighted
 							: {}
-						),
 				}))}
 				edges={edges.map((e) => ({
 					...e,
-					style: selectedEdgeId == e.id
-						? { stroke: "#2f4eff", strokeWidth: 2 }
-						: (highlightedEdges.has(e.id)
-							? { stroke: "#838cff", strokeWidth: 2 }
-							: {}
-						),
+					style: {
+						...baseEdgeStyle,
+						...(selectedEdgeId === e.id
+							? edgeStyles.selected
+							: highlightedEdges.has(e.id)
+								? edgeStyles.highlighted
+								: {})
+					},
+					markerEnd: {
+						...baseMarker,
+						...(selectedEdgeId === e.id || highlightedEdges.has(e.id) ? {
+							color: selectedEdgeId === e.id ? SELECTED_COLOR : HIGHLIGHTED_COLOR
+						} : {})
+					},
+					zIndex: (selectedEdgeId === e.id || highlightedEdges.has(e.id)) ? (
+						selectedEdgeId === e.id) ? SELECTED_ZINDEX : HIGHLIGHTED_ZINDEX
+						: BASE_ZINDEX
 				}))}
 				nodeTypes={nodeTypes}
 				onNodesChange={onNodesChange}
