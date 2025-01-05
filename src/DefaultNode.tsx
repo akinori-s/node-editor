@@ -80,15 +80,14 @@ function DefaultNode({ id, data }: NodeProps<DefaultNodeProps>) {
 
 	return (
 		<div
-			className="flex flex-col px-4 py-2 min-w-48 max-w-96 bg-white border border-black rounded-md text-black"
+			className="flex flex-col px-3 py-2 min-w-40 max-w-96 bg-white border border-black rounded-md text-black"
 			ref={nodeContainerRef}
 			onDoubleClick={handleDoubleClick}
-		// tabIndex={0}
 		>
 			{id === isEditingNodeId ? (
 				<>
 					<input
-						className="break-words text-sm text-center border-x border-slate-300 focus:outline-none"
+						className="break-words text-sm text-center border border-slate-300 rounded focus:outline-none"
 						value={values.label}
 						onChange={handleChange('label')}
 						onKeyDown={handleKeyDown}
@@ -99,7 +98,13 @@ function DefaultNode({ id, data }: NodeProps<DefaultNodeProps>) {
 				</>
 			) : (
 				<>
-					<div className="break-words text-sm text-center">{data.label || "N/A"}</div>
+					<div
+						className={`break-words text-sm text-center
+						${!data.label ? "text-slate-400" : ""}
+						`}
+					>
+						{data.label || "label"}
+					</div>
 				</>
 			)}
 			<Handle

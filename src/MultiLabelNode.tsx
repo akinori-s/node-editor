@@ -84,7 +84,7 @@ function MultiLabelNode({ id, data }: NodeProps<MultiLabelNodeProps>) {
 
 	return (
 		<div
-			className="flex flex-col px-4 py-2 min-w-48 max-w-96 bg-white border border-black rounded-md text-black"
+			className="flex flex-col px-3 py-2 min-w-40 max-w-96 bg-white border border-black rounded-md text-black"
 			ref={nodeContainerRef}
 			onDoubleClick={handleDoubleClick}
 		// tabIndex={0}
@@ -116,14 +116,27 @@ function MultiLabelNode({ id, data }: NodeProps<MultiLabelNodeProps>) {
 				</>
 			) : (
 				<>
-					{/* The default “label” field */}
-					<div className="break-words text-xs text-slate-400 text-center">{data.sublabel1 || "N/A"}</div>
-
-					{/* Additional fields */}
-					<div className="break-words text-sm text-center">{data.label || "N/A"}</div>
-					<div className="break-words text-xs text-slate-600 text-center">{data.sublabel2 || "N/A"}</div>
-
-					{/* Example: add default handles for edges */}
+					<div
+						className={`break-words text-xs text-slate-400 text-center
+							${!data.sublabel1 ? "text-slate-200" : ""}
+						`}
+					>
+						{data.sublabel1 || "sub-label 1"}
+					</div>
+					<div
+						className={`break-words text-sm text-center
+							${!data.label ? "text-slate-400" : ""}
+						`}
+					>
+						{data.label || "label"}
+					</div>
+					<div
+						className={`break-words text-xs text-slate-600 text-center
+							${!data.sublabel2 ? "text-slate-200" : ""}
+						`}
+					>
+						{data.sublabel2 || "sub-label 2"}
+					</div>
 				</>
 			)}
 			<Handle

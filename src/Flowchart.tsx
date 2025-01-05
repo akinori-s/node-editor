@@ -24,6 +24,7 @@ import "reactflow/dist/style.css";
 
 import { NodeTypeNames, useStore } from "./store";
 import { getUpstreamAndDownstream } from "./graphUtils";
+import DefaultNode from "./DefaultNode";
 import MultiLabelNode from "./MultiLabelNode";
 import { FlowNodeData } from "./types";
 import { v4 as uuid } from "uuid";
@@ -64,6 +65,7 @@ const edgeStyles = {
 };
 
 const nodeTypes = {
+	defaultNode: DefaultNode,
 	multiLabelNode: MultiLabelNode,
 };
 
