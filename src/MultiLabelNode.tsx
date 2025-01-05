@@ -70,7 +70,6 @@ function MultiLabelNode({ id, data }: NodeProps<MultiLabelNodeProps>) {
 		}
 	};
 
-	// On confirm, update the node label
 	const handleConfirm = useCallback(() => {
 		if (!isEditingNodeId) return;
 		if (isLabelDuplicate(nodes, values.label, isEditingNodeId)) {
@@ -87,7 +86,6 @@ function MultiLabelNode({ id, data }: NodeProps<MultiLabelNodeProps>) {
 			className="flex flex-col px-3 py-2 min-w-40 max-w-96 bg-white border border-black rounded-md text-black"
 			ref={nodeContainerRef}
 			onDoubleClick={handleDoubleClick}
-		// tabIndex={0}
 		>
 			{id === isEditingNodeId ? (
 				<>

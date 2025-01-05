@@ -66,7 +66,6 @@ function DefaultNode({ id, data }: NodeProps<DefaultNodeProps>) {
 		}
 	};
 
-	// On confirm, update the node label
 	const handleConfirm = useCallback(() => {
 		if (!isEditingNodeId) return;
 		if (isLabelDuplicate(nodes, values.label, isEditingNodeId)) {

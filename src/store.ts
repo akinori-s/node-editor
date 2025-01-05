@@ -120,7 +120,6 @@ export const useStore = create<AppState>()(
 
 		setNewNodeType: (nodeType) => set({ newNodeType: nodeType }),
 
-		// Add a new node at a given position
 		onAddNode: (nodeType: string, position: XYPosition) => {
 			set((state) => {
 				const nodeLabel = getNextNodeName(state.nodes);
