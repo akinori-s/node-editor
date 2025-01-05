@@ -198,15 +198,14 @@ export default function Flowchart() {
 		setSelectedEdgeId, setHighlightedElements]);
 
 	// --- Add Node ---
-	const addNewNode = useCallback(() => {
+	const addNewNode = useCallback((nodeType: string) => {
 		const position: XYPosition = { x: 1000, y: 500 };
-		const nodeType = useStore.getState().newNodeType;
 		onAddNode(nodeType, position);
 	}, [onAddNode]);
 
 	const handleNodeTypeChange = useCallback((nodeType: string) => () => {
 		setNewNodeType(nodeType);
-		addNewNode();
+		addNewNode(nodeType);
 	}, [setNewNodeType, addNewNode]);
 
 	// --- Selection Change Handler ---
@@ -229,14 +228,18 @@ export default function Flowchart() {
 		<div className="w-full h-full" onKeyDown={onKeyDown} tabIndex={0}>
 			<div className="absolute top-4 right-4 z-10 flex gap-1">
 				<Button
-					onClick={addNewNode}
+					onClick={() => addNewNode(NodeTypeNames.Default)}
 				>
-					Add Node
+					Add Default Node
+				</Button>
+				<Button
+					onClick={() => addNewNode(NodeTypeNames.MultiLabel)}
+				>
+					Add Multi Label Node
 				</Button>
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild className="flex flex-col items-center">
 						<Button
-							onClick={addNewNode}
 							className="px-3"
 						>
 							<ChevronDown />
