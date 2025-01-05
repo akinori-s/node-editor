@@ -3,6 +3,7 @@ import { Edge, Node, XYPosition, Position } from "reactflow";
 import { DefaultNodeProps } from "./DefaultNode";
 import { MultiLabelNodeProps } from "./MultiLabelNode";
 import { v4 as uuid } from "uuid";
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 export const NodeTypeNames = {
 	Default: "defaultNode",
@@ -21,7 +22,7 @@ interface AppState {
 	selectedEdgeIds: string[];
 
 	newNodeType: string;
-	
+
 	setNodes: (setter: (nodes: Node<DefaultNodeProps | MultiLabelNodeProps>[]) => Node<DefaultNodeProps | MultiLabelNodeProps>[] | void) => void;
 	setEdges: (setter: (edges: Edge[]) => Edge[] | void) => void;
 	setSelectedNodeId: (nodeId: string | null) => void;
@@ -78,103 +79,115 @@ const nodeFactories: Record<string, NodeCreator> = {
 	}),
 };
 
-export const useStore = create<AppState>((set) => ({
-	nodes: [],
-	edges: [],
-	selectedNodeId: null,
-	selectedEdgeId: null,
-	isEditingNodeId: null,
-	highlightedNodes: new Set(),
-	highlightedEdges: new Set(),
-	selectedNodeIds: [],
-	selectedEdgeIds: [],
+export const useStore = create<AppState>()(
+	persist((set) => ({
+		nodes: [],
+		edges: [],
+		selectedNodeId: null,
+		selectedEdgeId: null,
+		isEditingNodeId: null,
+		highlightedNodes: new Set(),
+		highlightedEdges: new Set(),
+		selectedNodeIds: [],
+		selectedEdgeIds: [],
 
-	newNodeType: NodeTypeNames.Default,
+		newNodeType: NodeTypeNames.Default,
 
-	setNodes: (setter) => set((state) => {
-		const newNodes = setter([...state.nodes]);
-		return newNodes ? { nodes: newNodes } : {};
-	}),
+		setNodes: (setter) => set((state) => {
+			const newNodes = setter([...state.nodes]);
+			return newNodes ? { nodes: newNodes } : {};
+		}),
 
-	setEdges: (setter) => set((state) => {
-		const newEdges = setter([...state.edges]);
-		return newEdges ? { edges: newEdges } : {};
-	}),
+		setEdges: (setter) => set((state) => {
+			const newEdges = setter([...state.edges]);
+			return newEdges ? { edges: newEdges } : {};
+		}),
 
-	setSelectedNodeId: (nodeId) => set({ selectedNodeId: nodeId }),
+		setSelectedNodeId: (nodeId) => set({ selectedNodeId: nodeId }),
 
-	setSelectedEdgeId: (edgeId) => set({ selectedEdgeId: edgeId }),
+		setSelectedEdgeId: (edgeId) => set({ selectedEdgeId: edgeId }),
 
-	setIsEditingNodeId: (nodeId) => set({ isEditingNodeId: nodeId }),
+		setIsEditingNodeId: (nodeId) => set({ isEditingNodeId: nodeId }),
 
-	setSelectedNodeIds: (ids: string[]) => set({ selectedNodeIds: ids }),
+		setSelectedNodeIds: (ids: string[]) => set({ selectedNodeIds: ids }),
 
-	setSelectedEdgeIds: (ids: string[]) => set({ selectedEdgeIds: ids }),
+		setSelectedEdgeIds: (ids: string[]) => set({ selectedEdgeIds: ids }),
 
-	setHighlightedElements: ({ nodes, edges }) => set({
-		highlightedNodes: nodes,
-		highlightedEdges: edges,
-	}),
+		setHighlightedElements: ({ nodes, edges }) => set({
+			highlightedNodes: nodes,
+			highlightedEdges: edges,
+		}),
 
-	setNewNodeType: (nodeType) => set({ newNodeType: nodeType }),
+		setNewNodeType: (nodeType) => set({ newNodeType: nodeType }),
 
-	// Add a new node at a given position
-	onAddNode: (nodeType: string, position: XYPosition) => {
-		set((state) => {
-			const nodeLabel = getNextNodeName(state.nodes);
-			const createNode = nodeFactories[nodeType];
+		// Add a new node at a given position
+		onAddNode: (nodeType: string, position: XYPosition) => {
+			set((state) => {
+				const nodeLabel = getNextNodeName(state.nodes);
+				const createNode = nodeFactories[nodeType];
 
-			if (!createNode) {
-				console.warn(`Unknown node type: ${nodeType}`);
-				return state;
-			}
+				if (!createNode) {
+					console.warn(`Unknown node type: ${nodeType}`);
+					return state;
+				}
 
-			const newNode = createNode(position, nodeLabel);
-			return {
-				nodes: [...state.nodes, newNode]
-			};
-		});
-	},
+				const newNode = createNode(position, nodeLabel);
+				return {
+					nodes: [...state.nodes, newNode]
+				};
+			});
+		},
 
-	onDeleteSelected: () => set((state) => {
-		const remainingNodes = state.nodes.filter(
-			node => !state.selectedNodeIds.includes(node.id)
-		);
-		const remainingEdges = state.edges.filter(
-			edge => !state.selectedEdgeIds.includes(edge.id) &&
-				!state.selectedNodeIds.includes(edge.source) &&
-				!state.selectedNodeIds.includes(edge.target)
-		);
-
-		return {
-			nodes: remainingNodes,
-			edges: remainingEdges,
-			selectedNodeIds: [],
-			selectedEdgeIds: [],
-			selectedNodeId: null,
-			selectedEdgeId: null,
-			highlightedNodes: new Set(),
-			highlightedEdges: new Set()
-		};
-	}),
-
-	isLabelDuplicate: (nodes: Node[], label: string, excludeNodeId?: string) => {
-		return nodes.some(node =>
-			node.data.label === label && node.id !== excludeNodeId
-		);
-	},
-
-	setNodeData: (nodeId: string, nodeData: any) => {
-		set((state) => {
-			const updatedNodes = state.nodes.map(node =>
-				node.id === nodeId
-					? {
-						...node,
-						data: { ...nodeData }
-					}
-					: node
+		onDeleteSelected: () => set((state) => {
+			const remainingNodes = state.nodes.filter(
+				node => !state.selectedNodeIds.includes(node.id)
 			);
-			return { nodes: updatedNodes };
-		});
-	},
-}));
+			const remainingEdges = state.edges.filter(
+				edge => !state.selectedEdgeIds.includes(edge.id) &&
+					!state.selectedNodeIds.includes(edge.source) &&
+					!state.selectedNodeIds.includes(edge.target)
+			);
+
+			return {
+				nodes: remainingNodes,
+				edges: remainingEdges,
+				selectedNodeIds: [],
+				selectedEdgeIds: [],
+				selectedNodeId: null,
+				selectedEdgeId: null,
+				highlightedNodes: new Set(),
+				highlightedEdges: new Set()
+			};
+		}),
+
+		isLabelDuplicate: (nodes: Node[], label: string, excludeNodeId?: string) => {
+			return nodes.some(node =>
+				node.data.label === label && node.id !== excludeNodeId
+			);
+		},
+
+		setNodeData: (nodeId: string, nodeData: any) => {
+			set((state) => {
+				const updatedNodes = state.nodes.map(node =>
+					node.id === nodeId
+						? {
+							...node,
+							data: { ...nodeData }
+						}
+						: node
+				);
+				return { nodes: updatedNodes };
+			});
+		},
+	}),
+		{
+			name: 'flowchart-storage',
+			storage: createJSONStorage(() => localStorage),
+			// Only persist these fields:
+			partialize: (state) => ({
+				nodes: state.nodes,
+				edges: state.edges,
+			}),
+		}
+	)
+);
