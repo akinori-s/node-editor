@@ -36,7 +36,6 @@ const SELECTED_ZINDEX = 2;
 const HIGHLIGHTED_COLOR = "#838cff";
 const HIGHLIGHTED_ZINDEX = 1;
 const BASE_ZINDEX = 0;
-const baseEdgeStyle = { strokeWidth: 3 };
 const baseMarker = { type: MarkerType.ArrowClosed };
 
 const nodeStyles = {
@@ -52,8 +51,9 @@ const nodeStyles = {
 	}
 };
 const edgeStyles = {
+	base: { strokeWidth: 2 },
 	selected: { stroke: SELECTED_COLOR, strokeWidth: 4 },
-	highlighted: { stroke: HIGHLIGHTED_COLOR }
+	highlighted: { stroke: HIGHLIGHTED_COLOR, strokeWidth: 3 }
 };
 
 const nodeTypes = {
@@ -167,7 +167,7 @@ export default function Flowchart() {
 	const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
 		const { isEditingNodeId } = useStore.getState();
 		if (isEditingNodeId) {
-			return ;
+			return;
 		}
 		if (e.key === "Delete") {
 			if (selectedNodeIds.length > 0 || selectedEdgeIds.length > 0) {
@@ -233,7 +233,7 @@ export default function Flowchart() {
 				edges={edges.map((e) => ({
 					...e,
 					style: {
-						...baseEdgeStyle,
+						...edgeStyles.base,
 						...(selectedEdgeId === e.id
 							? edgeStyles.selected
 							: highlightedEdges.has(e.id)
