@@ -55,7 +55,7 @@ export default function AppSidebar() {
 		setSelectedEdgeId,
 		setHighlightedElements,
 		isLabelDuplicate,
-		setNodeLabel,
+		setNodeData,
 	} = useStore();
 	const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
 	const [editValue, setEditValue] = useState("");
@@ -113,7 +113,8 @@ export default function AppSidebar() {
 				setErrorNodeID(editingNodeId);
 				return;
 			}
-			setNodeLabel(editingNodeId, editValue);
+			const node = nodes.find((n) => n.id === editingNodeId);
+			setNodeData(editingNodeId, { ...node?.data, label: editValue });
 			setEditingNodeId(null);
 			setErrorNodeID("");
 		}
