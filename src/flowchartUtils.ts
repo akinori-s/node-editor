@@ -1,46 +1,59 @@
 import { Node, Edge, Position, MarkerType } from 'reactflow';
 import { v4 as uuid } from "uuid";
+import { MultiLabelNodeProps } from "./MultiLabelNode";
 
 interface FlowData {
 	nodes: Node[];
 	edges: Edge[];
 }
 
-export const generateExportData = (nodes: Node[], edges: Edge[]) => {
-	return nodes.map(node => {
-		const downstreamNodes = edges
-			.filter(edge => edge.source === node.id)
-			.map(edge => nodes.find(n => n.id === edge.target)?.data?.label);
+type NodeType = 'defaultNode' | 'multiLabelNode';
 
-		return {
-			type: node.type,
-			label: node.data?.label,
-			position: node.position,
-			downstream: downstreamNodes,
-		};
-	});
+const createNode = (nodeData: any, type: NodeType): Node => {
+	const baseNode = {
+		id: uuid(),
+		position: nodeData.position,
+		sourcePosition: Position.Right,
+		targetPosition: Position.Left,
+		type: type
+	};
+
+	switch (type) {
+		case 'multiLabelNode':
+			return {
+				...baseNode,
+				data: {
+					label: nodeData.label,
+					sublabel1: nodeData.sublabel1 || '',
+					sublabel2: nodeData.sublabel2 || ''
+				}
+			};
+		default:
+			return {
+				...baseNode,
+				data: { label: nodeData.label }
+			};
+	}
 };
 
 export const importFlowData = (jsonData: any): FlowData => {
 	const newNodes: Node[] = [];
 	const newEdges: Edge[] = [];
 
-	jsonData.forEach((node: any, _index: number) => {
-		const newNode: Node = {
-			id: uuid(),
-			position: node.position,
-			data: { label: node.label },
-			type: node.type ?? 'default',
-			sourcePosition: Position.Right,
-			targetPosition: Position.Left
-		}
+	// Create nodes
+	jsonData.forEach((nodeData: any) => {
+		const type = nodeData.type as NodeType ?? 'defaultNode';
+		const newNode = createNode(nodeData, type);
 		newNodes.push(newNode);
 	});
-	jsonData.forEach((node: any, _index: number) => {
-		node.downstream?.forEach((targetLabel: string) => {
-			const sourceNode = newNodes.find((n: Node) => n.data?.label === node.label);
+
+	// Create edges
+	jsonData.forEach((nodeData: any) => {
+		nodeData.downstream?.forEach((targetLabel: string) => {
+			const sourceNode = newNodes.find((n: Node) => n.data?.label === nodeData.label);
 			const targetNode = newNodes.find((n: Node) => n.data?.label === targetLabel);
-			if (sourceNode !== undefined && targetNode !== undefined) {
+
+			if (sourceNode && targetNode) {
 				newEdges.push({
 					id: uuid(),
 					source: sourceNode.id,
@@ -51,7 +64,34 @@ export const importFlowData = (jsonData: any): FlowData => {
 			}
 		});
 	});
+
 	return { nodes: newNodes, edges: newEdges };
+};
+
+export const generateExportData = (nodes: Node[], edges: Edge[]) => {
+	return nodes.map(node => {
+		const downstreamNodes = edges
+			.filter(edge => edge.source === node.id)
+			.map(edge => nodes.find(n => n.id === edge.target)?.data?.label);
+
+		const baseData = {
+			type: node.type,
+			label: node.data?.label,
+			position: node.position,
+			downstream: downstreamNodes,
+		};
+
+		// Add type-specific data
+		if (node.type === 'multiLabelNode') {
+			return {
+				...baseData,
+				sublabel1: (node.data as MultiLabelNodeProps).sublabel1,
+				sublabel2: (node.data as MultiLabelNodeProps).sublabel2,
+			};
+		}
+
+		return baseData;
+	});
 };
 
 export const exportToFile = (nodes: Node[], edges: Edge[]) => {
