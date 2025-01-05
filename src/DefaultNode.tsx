@@ -91,6 +91,7 @@ function DefaultNode({ id, data }: NodeProps<DefaultNodeProps>) {
 						value={values.label}
 						onChange={handleChange('label')}
 						onKeyDown={handleKeyDown}
+						autoFocus
 					/>
 					{errorNodeID === isEditingNodeId && (
 						<div className="text-center text-red-500 text-xs">Duplicate label</div>
