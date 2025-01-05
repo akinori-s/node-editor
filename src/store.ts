@@ -10,7 +10,7 @@ export const NodeTypeNames = {
 };
 
 interface AppState {
-	nodes: Node<MultiLabelNodeProps>[];
+	nodes: Node<DefaultNodeProps | MultiLabelNodeProps>[];
 	edges: Edge[];
 	selectedNodeId: string | null;
 	selectedEdgeId: string | null;
@@ -20,7 +20,9 @@ interface AppState {
 	selectedNodeIds: string[];
 	selectedEdgeIds: string[];
 
-	setNodes: (setter: (nodes: Node<MultiLabelNodeProps>[]) => Node<MultiLabelNodeProps>[] | void) => void;
+	newNodeType: string;
+	
+	setNodes: (setter: (nodes: Node<DefaultNodeProps | MultiLabelNodeProps>[]) => Node<DefaultNodeProps | MultiLabelNodeProps>[] | void) => void;
 	setEdges: (setter: (edges: Edge[]) => Edge[] | void) => void;
 	setSelectedNodeId: (nodeId: string | null) => void;
 	setSelectedEdgeId: (edgeId: string | null) => void;
@@ -29,13 +31,15 @@ interface AppState {
 	setSelectedEdgeIds: (edgeIds: string[]) => void;
 	setHighlightedElements: (payload: { nodes: Set<string>; edges: Set<string> }) => void;
 
-	onAddNode: (position: XYPosition) => void;
+	setNewNodeType: (nodeType: string) => void;
+
+	onAddNode: (nodeType: string, position: XYPosition) => void;
 	onDeleteSelected: () => void;
 	isLabelDuplicate: (nodes: Node[], label: string, excludeNodeId?: string) => boolean;
 	setNodeData: (nodeId: string, nodeLabel: any) => void;
 }
 
-const getNextNodeName = (nodes: Node<MultiLabelNodeProps>[]): string => {
+const getNextNodeName = (nodes: Node<DefaultNodeProps | MultiLabelNodeProps>[]): string => {
 	const baseLabel = "New Node";
 	const existingLabels = new Set(nodes.map(node => node.data.label));
 
@@ -48,6 +52,32 @@ const getNextNodeName = (nodes: Node<MultiLabelNodeProps>[]): string => {
 	return `${baseLabel} ${counter}`;
 };
 
+type NodeCreator = (position: XYPosition, nodeType: string) => Node<any>;
+
+const nodeFactories: Record<string, NodeCreator> = {
+	[NodeTypeNames.Default]: (position: XYPosition, label: string): Node<DefaultNodeProps> => ({
+		id: uuid(),
+		position,
+		data: { label },
+		type: "defaultNode",
+		sourcePosition: Position.Right,
+		targetPosition: Position.Left,
+	}),
+
+	[NodeTypeNames.MultiLabel]: (position: XYPosition, label: string): Node<MultiLabelNodeProps> => ({
+		id: uuid(),
+		position,
+		data: {
+			label,
+			sublabel1: "sub-label 1",
+			sublabel2: "sub-label 2",
+		},
+		type: "multiLabelNode",
+		sourcePosition: Position.Right,
+		targetPosition: Position.Left,
+	}),
+};
+
 export const useStore = create<AppState>((set) => ({
 	nodes: [],
 	edges: [],
@@ -58,6 +88,8 @@ export const useStore = create<AppState>((set) => ({
 	highlightedEdges: new Set(),
 	selectedNodeIds: [],
 	selectedEdgeIds: [],
+
+	newNodeType: NodeTypeNames.Default,
 
 	setNodes: (setter) => set((state) => {
 		const newNodes = setter([...state.nodes]);
@@ -84,24 +116,22 @@ export const useStore = create<AppState>((set) => ({
 		highlightedEdges: edges,
 	}),
 
+	setNewNodeType: (nodeType) => set({ newNodeType: nodeType }),
+
 	// Add a new node at a given position
-	onAddNode: (position: XYPosition) => {
+	onAddNode: (nodeType: string, position: XYPosition) => {
 		set((state) => {
 			const nodeLabel = getNextNodeName(state.nodes);
-			const newNode: Node<MultiLabelNodeProps> = {
-				id: uuid(),
-				position,
-				data: {
-					label: nodeLabel,
-					sublabel1: "sub-label 1",
-					sublabel2: "sub-label 2",
-				},
-				type: "multiLabelNode",
-				sourcePosition: Position.Right,
-				targetPosition: Position.Left,
-			};
+			const createNode = nodeFactories[nodeType];
+
+			if (!createNode) {
+				console.warn(`Unknown node type: ${nodeType}`);
+				return state;
+			}
+
+			const newNode = createNode(position, nodeLabel);
 			return {
-				nodes: [...state.nodes, newNode],
+				nodes: [...state.nodes, newNode]
 			};
 		});
 	},

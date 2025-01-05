@@ -22,13 +22,20 @@ import ReactFlow, {
 } from "reactflow";
 import "reactflow/dist/style.css";
 
-import { useStore } from "./store";
+import { NodeTypeNames, useStore } from "./store";
 import { getUpstreamAndDownstream } from "./graphUtils";
-// import NodeEditor from "./NodeEditor";
 import MultiLabelNode from "./MultiLabelNode";
 import { FlowNodeData } from "./types";
 import { v4 as uuid } from "uuid";
 import { Button } from "@/components/ui/button"
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuRadioGroup,
+	DropdownMenuRadioItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { ChevronDown } from "lucide-react"
 
 const SELECTED_BG = "#eceefa";
 const SELECTED_COLOR = "#2f4eff";
@@ -71,7 +78,6 @@ export default function Flowchart() {
 		setSelectedNodeId,
 		selectedEdgeId,
 		setSelectedEdgeId,
-		// isEditingNodeId,
 		highlightedNodes,
 		highlightedEdges,
 		setIsEditingNodeId,
@@ -81,6 +87,9 @@ export default function Flowchart() {
 		selectedEdgeIds,
 		setSelectedNodeIds,
 		setSelectedEdgeIds,
+
+		newNodeType,
+		setNewNodeType,
 	} = useStore();
 
 	// --- Node & Edge Change Handlers ---
@@ -191,8 +200,14 @@ export default function Flowchart() {
 	// --- Add Node ---
 	const addNewNode = useCallback(() => {
 		const position: XYPosition = { x: 1000, y: 500 };
-		onAddNode(position);
+		const nodeType = useStore.getState().newNodeType;
+		onAddNode(nodeType, position);
 	}, [onAddNode]);
+
+	const handleNodeTypeChange = useCallback((nodeType: string) => () => {
+		setNewNodeType(nodeType);
+		addNewNode();
+	}, [setNewNodeType, addNewNode]);
 
 	// --- Selection Change Handler ---
 	const onSelectionChange = useCallback((params: OnSelectionChangeParams) => {
@@ -212,12 +227,32 @@ export default function Flowchart() {
 
 	return (
 		<div className="w-full h-full" onKeyDown={onKeyDown} tabIndex={0}>
-			<div className="absolute top-4 right-4 z-10 flex gap-2">
+			<div className="absolute top-4 right-4 z-10 flex gap-1">
 				<Button
 					onClick={addNewNode}
 				>
 					Add Node
 				</Button>
+				<DropdownMenu>
+					<DropdownMenuTrigger asChild className="flex flex-col items-center">
+						<Button
+							onClick={addNewNode}
+							className="px-3"
+						>
+							<ChevronDown />
+						</Button>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent>
+						<DropdownMenuRadioGroup value={newNodeType} onValueChange={setNewNodeType}>
+							<DropdownMenuRadioItem value={NodeTypeNames.Default} onClick={handleNodeTypeChange(NodeTypeNames.Default)}>
+								Default Node
+							</DropdownMenuRadioItem>
+							<DropdownMenuRadioItem value={NodeTypeNames.MultiLabel} onClick={handleNodeTypeChange(NodeTypeNames.MultiLabel)}>
+								Multi Label Node
+							</DropdownMenuRadioItem>
+						</DropdownMenuRadioGroup>
+					</DropdownMenuContent>
+				</DropdownMenu>
 			</div>
 
 			<ReactFlow
@@ -275,9 +310,6 @@ export default function Flowchart() {
 				<Background />
 				<Controls />
 			</ReactFlow>
-
-			{/* Editor Modal if isEditingNodeId is set */}
-			{/* {isEditingNodeId !== null && <NodeEditor />} */}
 		</div >
 	);
 }
