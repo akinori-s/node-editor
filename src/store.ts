@@ -1,7 +1,13 @@
 import { create } from "zustand";
 import { Edge, Node, XYPosition, Position } from "reactflow";
+import { DefaultNodeProps } from "./DefaultNode";
 import { MultiLabelNodeProps } from "./MultiLabelNode";
 import { v4 as uuid } from "uuid";
+
+export const NodeTypeNames = {
+	Default: "defaultNode",
+	MultiLabel: "multiLabelNode",
+};
 
 interface AppState {
 	nodes: Node<MultiLabelNodeProps>[];

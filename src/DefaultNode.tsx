@@ -2,19 +2,15 @@ import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Handle, Position, NodeProps } from "reactflow";
 import { useStore } from "./store";
 
-export interface MultiLabelNodeProps {
+export interface DefaultNodeProps {
 	label: string;
-	sublabel1: string;
-	sublabel2: string;
 }
 
-function MultiLabelNode({ id, data }: NodeProps<MultiLabelNodeProps>) {
+function DefaultNode({ id, data }: NodeProps<DefaultNodeProps>) {
 	const nodeContainerRef = useRef<HTMLDivElement>(null);
 	const [errorNodeID, setErrorNodeID] = useState("");
 	const [values, setValues] = useState({
 		label: data.label,
-		sublabel1: data.sublabel1,
-		sublabel2: data.sublabel2,
 	});
 	const {
 		isEditingNodeId,
@@ -92,22 +88,9 @@ function MultiLabelNode({ id, data }: NodeProps<MultiLabelNodeProps>) {
 			{id === isEditingNodeId ? (
 				<>
 					<input
-						className="break-words text-xs text-slate-400 text-center border border-slate-300 rounded-t focus:outline-none"
-						value={values.sublabel1}
-						onChange={handleChange('sublabel1')}
-						onKeyDown={handleKeyDown}
-						autoFocus
-					/>
-					<input
 						className="break-words text-sm text-center border-x border-slate-300 focus:outline-none"
 						value={values.label}
 						onChange={handleChange('label')}
-						onKeyDown={handleKeyDown}
-					/>
-					<input
-						className="break-words text-xs text-slate-600 text-center border border-slate-300 rounded-b focus:outline-none"
-						value={values.sublabel2}
-						onChange={handleChange('sublabel2')}
 						onKeyDown={handleKeyDown}
 					/>
 					{errorNodeID === isEditingNodeId && (
@@ -116,14 +99,7 @@ function MultiLabelNode({ id, data }: NodeProps<MultiLabelNodeProps>) {
 				</>
 			) : (
 				<>
-					{/* The default “label” field */}
-					<div className="break-words text-xs text-slate-400 text-center">{data.sublabel1 || "N/A"}</div>
-
-					{/* Additional fields */}
 					<div className="break-words text-sm text-center">{data.label || "N/A"}</div>
-					<div className="break-words text-xs text-slate-600 text-center">{data.sublabel2 || "N/A"}</div>
-
-					{/* Example: add default handles for edges */}
 				</>
 			)}
 			<Handle
@@ -140,4 +116,4 @@ function MultiLabelNode({ id, data }: NodeProps<MultiLabelNodeProps>) {
 	);
 }
 
-export default memo(MultiLabelNode);
+export default memo(DefaultNode);

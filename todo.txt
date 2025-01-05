@@ -1,4 +1,4 @@
-- read-only mode
+- allow multiple node types
 - fix multi select highlighting
 - fix sidebar
 - implement an undo feature
