@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useStore } from "./store";
 import { getUpstreamAndDownstream } from "./graphUtils";
 import { importFlowData, exportToFile } from './flowchartUtils';
-import { ArrowDownUp, Command as CommandIcon, FolderInput, FolderOutput, PanelRightOpen, Settings, SquareChevronRight, SquareMinus } from "lucide-react"
+import { Command as CommandIcon, FolderInput, FolderOutput, PanelRightOpen, Settings, SquareChevronRight, SquareMinus, ClockArrowDown, ArrowDownAZ } from "lucide-react"
 import {
 	Sidebar,
 	SidebarContent,
@@ -79,6 +79,12 @@ export default function AppSidebar() {
 		// "default" creation order is simply the order in which they appear in nodes
 		return filteredNodes;
 	}, [filteredNodes, sortMethod]);
+
+	// Helper for sort icons
+	const sortIcons = {
+		default: <ClockArrowDown size={16} />,
+		alphabetical: <ArrowDownAZ size={16} />
+	};
 
 	/**
 	 * Handler for clicking a node in the sidebar
@@ -170,8 +176,8 @@ export default function AppSidebar() {
 			<SidebarHeader>
 				<SidebarGroup>
 					<SidebarGroupContent>
-						<SidebarMenu className="flex flex-row">
-							<SidebarMenuItem>
+						<SidebarMenu className="flex flex-row gap-2">
+							<SidebarMenuItem className="flex-1">
 								<Input
 									type="text"
 									placeholder="Search"
@@ -180,18 +186,29 @@ export default function AppSidebar() {
 								/>
 							</SidebarMenuItem>
 							<SidebarMenuItem>
-								<Select value={sortMethod} onValueChange={(e: any) => setSortMethod(e.target.value)} >
-									<SelectTrigger className="w-8 h-8 p-0 flex items-center justify-center">
-										<SelectValue placeholder={<ArrowDownUp size={16} />} />
+								<Select value={sortMethod} onValueChange={(value) => setSortMethod(value as "default" | "alphabetical")}>
+									<SelectTrigger>
+										<SelectValue>
+											{sortIcons[sortMethod]}
+										</SelectValue>
 									</SelectTrigger>
 									<SelectContent>
 										<SelectGroup>
-											<SelectItem value="default">Created Order</SelectItem>
-											<SelectItem value="alphabetical">Alphabetical</SelectItem>
+											<SelectItem value="default">
+												<div className="flex items-center gap-2">
+													{sortIcons.default}
+													<span>Created Order</span>
+												</div>
+											</SelectItem>
+											<SelectItem value="alphabetical">
+												<div className="flex items-center gap-2">
+													{sortIcons.alphabetical}
+													<span>Alphabetical</span>
+												</div>
+											</SelectItem>
 										</SelectGroup>
 									</SelectContent>
 								</Select>
-
 							</SidebarMenuItem>
 						</SidebarMenu>
 					</SidebarGroupContent>
