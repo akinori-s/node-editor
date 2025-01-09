@@ -2,7 +2,10 @@ import { useMemo, useState } from "react";
 import { useStore } from "./store";
 import { getUpstreamAndDownstream } from "./graphUtils";
 import { importFlowData, exportToFile } from './flowchartUtils';
-import { Command as CommandIcon, FolderInput, FolderOutput, PanelRightOpen, Settings, SquareChevronRight, SquareMinus, ClockArrowDown, ArrowDownAZ } from "lucide-react"
+import {
+	Command as CommandIcon, FolderInput, FolderOutput, PanelRightOpen, Settings,
+	SquareChevronRight, SquareMinus, ClockArrowDown, ArrowDownAZ, Undo, Redo
+} from "lucide-react"
 import {
 	Sidebar,
 	SidebarContent,
@@ -316,6 +319,16 @@ export default function AppSidebar() {
 											<SquareMinus />
 											<span>Cancel node changes</span>
 											<CommandShortcut>⌘Esc</CommandShortcut>
+										</CommandItem>
+										<CommandItem>
+											<Undo />
+											<span>Undo</span>
+											<CommandShortcut>⌘Ctrl + z</CommandShortcut>
+										</CommandItem>
+										<CommandItem>
+											<Redo />
+											<span>Redo</span>
+											<CommandShortcut>⌘Ctrl + y</CommandShortcut>
 										</CommandItem>
 									</CommandGroup>
 								</CommandList>

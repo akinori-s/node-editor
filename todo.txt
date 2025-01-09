@@ -1,8 +1,10 @@
-- fix multi select highlighting
-- fix sidebar
-- implement an undo feature
-- add node types for categorization
-  - manage node types in sidebar with collasible groups
+- offset new nodes
+- implement an undo/redo feature (using naive method)
 - copy and paste node feature
+- add tags for nodes (a node can have multiple tags)
+- add node categories (a node can only have one category)
+- fix sidebar
+- optimize undo/redo feature (record only diffs)
 - highlight multiple nodes and edges when they are selected using shift click
-- sidebar that becomes slightly transparent when unused, or just a semi transparent inset sidebar
+- add a toggle that would make unselected nodes and edges near transparent
+- add list of highlighted nodes to be copy and pasted as text
