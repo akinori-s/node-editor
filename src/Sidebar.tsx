@@ -163,8 +163,8 @@ export default function AppSidebar() {
 			reader.onload = (event) => {
 				const jsonData = JSON.parse(event.target?.result as string);
 				const { nodes: newNodes, edges: newEdges } = importFlowData(jsonData);
-				setNodes(() => newNodes);
-				setEdges(() => newEdges);
+				setNodes(() => newNodes, false);
+				setEdges(() => newEdges, false);
 			};
 			reader.readAsText(file);
 		} catch (error) {

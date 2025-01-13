@@ -90,18 +90,28 @@ export default function Flowchart() {
 		setSelectedNodeIds,
 		setSelectedEdgeIds,
 
+		undo,
+		redo,
+
 		newNodeType,
 		setNewNodeType,
 	} = useStore();
 
 	// --- Node & Edge Change Handlers ---
-
 	const onNodesChange: OnNodesChange = useCallback((changes) => {
-		setNodes((prevNodes) => applyNodeChanges(changes, prevNodes));
+		var isSetHistory = true;
+		if (changes[0].type === "select" || (changes[0].type === "position" && changes[0].dragging)) {
+			isSetHistory = false;
+		}
+		setNodes((prevNodes) => applyNodeChanges(changes, prevNodes), isSetHistory);
 	}, [setNodes]);
 
 	const onEdgesChange: OnEdgesChange = useCallback((changes) => {
-		setEdges((prevEdges) => applyEdgeChanges(changes, prevEdges));
+		var isSetHistory = true;
+		if (changes[0].type === "select") {
+			isSetHistory = false;
+		}
+		setEdges((prevEdges) => applyEdgeChanges(changes, prevEdges), isSetHistory);
 	}, [setEdges]);
 
 	const onConnect: OnConnect = useCallback((connection: Connection) => {
@@ -115,7 +125,7 @@ export default function Flowchart() {
 					markerEnd: { type: MarkerType.ArrowClosed },
 					type: 'smoothstep',
 				}));
-			setEdges((prevEdges) => [...prevEdges, ...newEdges]);
+			setEdges((prevEdges) => [...prevEdges, ...newEdges], true);
 			return;
 		} else {
 			const newEdge: Edge = {
@@ -125,12 +135,12 @@ export default function Flowchart() {
 				markerEnd: { type: MarkerType.ArrowClosed },
 				type: 'smoothstep',
 			};
-			setEdges((prevEdges) => addEdge(newEdge, prevEdges));
+			setEdges((prevEdges) => addEdge(newEdge, prevEdges), true);
 		}
 	}, [selectedNodeIds, setEdges]);
 
 	const onReconnect = useCallback((oldEdge: Edge, newConnection: Connection) => {
-		setEdges((edges) => reconnectEdge(oldEdge, newConnection, edges));
+		setEdges((edges) => reconnectEdge(oldEdge, newConnection, edges), true);
 	}, [setEdges]);
 
 	// --- Node & Edge Delete Handlers ---
@@ -139,7 +149,7 @@ export default function Flowchart() {
 		// Remove edges connected to these deleted nodes:
 		setEdges((prevEdges) =>
 			prevEdges.filter((edge) => !deletedIds.includes(edge.source) && !deletedIds.includes(edge.target))
-		);
+			, true);
 	}, [setEdges]);
 
 	const onEdgesDelete: OnEdgesDelete = useCallback((_deletedEdges) => {
@@ -184,14 +194,14 @@ export default function Flowchart() {
 			if (selectedNodeIds.length > 0 || selectedEdgeIds.length > 0) {
 				onDeleteSelected();
 			} else if (selectedNodeId) {
-				setNodes((nds) => nds.filter((n) => n.id !== selectedNodeId));
+				setNodes((nds) => nds.filter((n) => n.id !== selectedNodeId), true);
 				setEdges((eds) => eds.filter((ed) =>
 					ed.source !== selectedNodeId && ed.target !== selectedNodeId
-				));
+				), true);
 				setSelectedNodeId(null);
 				setHighlightedElements({ nodes: new Set(), edges: new Set() });
 			} else if (selectedEdgeId) {
-				setEdges((eds) => eds.filter((ed) => ed.id !== selectedEdgeId));
+				setEdges((eds) => eds.filter((ed) => ed.id !== selectedEdgeId), true);
 				setSelectedEdgeId(null);
 			}
 		}
@@ -229,6 +239,12 @@ export default function Flowchart() {
 	return (
 		<div className="w-full h-full" onKeyDown={onKeyDown} tabIndex={0}>
 			<div className="absolute top-4 right-4 z-10 flex gap-1">
+				<Button onClick={undo}>
+					Undo
+				</Button>
+				<Button onClick={redo} disabled>
+					Redo
+				</Button>
 				<Button
 					onClick={() => addNewNode(NodeTypeNames.Default)}
 				>
